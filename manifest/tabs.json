@@ -1,0 +1,43 @@
+{
+	"activetabparent": 0,
+	"activetabchild": 0,
+	"color": "00FFFF",
+	"tabs": [
+		{
+			"links": [
+				{
+					"path": "assets/path1.cbinary",
+					"color": ["FFFFFF"]
+				}
+			],
+			"color": ["FF0000"],
+			"name": "Funkin' View - chart tab test (single tab)"
+		},
+		{
+			"links": [
+				{
+					"path": "assets/path1_child.cbinary",
+					"color": ["FFFF00"]
+				},
+				{
+					"path": "assets/path2_child.cbinary",
+					"color": ["F0FF00"]
+				},
+				{
+					"path": "assets/path3_child.cbinary",
+					"color": ["0FFF00"]
+				},
+				{
+					"path": "assets/path4_child.cbinary",
+					"color": ["0FFFF0"]
+				},
+				{
+					"path": "assets/path5_child.cbinary",
+					"color": ["00FFFF"]
+				}
+			],
+			"color": ["FFFF00", "FF0000", "0000FF"],
+			"name": "Funkin' View - chart tab test (tab group)"
+		}
+	]
+}

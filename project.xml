@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<haxedef name="IN_FUNKIN_VIEW" />
+	<meta title="Friday Night Funkin': Peote View - Chart Editor UI Test" package="peote.view" version="0.1.0" company="Sylvio Sell - maitag" />
+
+	<window width="1280" height="720" fps="60" resizable="true" vsync="false" background="null" />
+	<window if="html5||android" width="0" height="0" />
+
+	<app main="Main" path="bin" file="fopv" />
+
+	<source path="src" />
+
+	<haxelib name="lime" />	
+	<haxelib name="peote-view" />
+	<haxelib name="format" />
+  
+	<!-- use special gl-features for optimization (if supported by opengl-es version) -->
+	<haxedef name="peoteview_uniformbuffers" />
+	<haxedef name="peoteview_instancedrawing" />
+	<haxedef name="peoteview_vertexarrayobjects" />
+
+	<!-- for html5 and loading inside onPreloadComplete-event the assets need to be embed=true --> 
+	<assets path="assets" exclude="lime.svg" embed="false" />
+
+	<!-- Enable full dce (originally to only prevent JIT ERROR 0 on jit.c line 541) -->
+	<haxeflag name="-dce" value="full" />
+
+	<!-- Allow working memory greater than 1 gigabyte -->
+	<haxedef name="HXCPP_GC_BIG_BLOCKS" />
+	<haxedef name="HXCPP_STACK_TRACE" if="debug" />
+	<haxedef name="HXCPP_STACK_LINE" if="debug" />
+
+	<!-- set hashlink version so that Int64Map is included from Std -->
+	<haxedef name="hl_ver" value="1.13.0" />
+
+	<haxedef name="HXCPP_CHECK_POINTER" if="release" />
+	<haxedef name="HXCPP_STACK_LINE" if="release" />
+	<haxedef name="HXCPP_STACK_TRACE" if="release" />
+
+	<haxedef name="HXCPP_CPP17" />
+
+	<icon path="assets/system/LimeFriend.png" />
+	<icon path="assets/system/LimeFriend_16.png" size="16"/>
+	<icon path="assets/system/LimeFriend_32.png" size="32"/>
+	<icon path="assets/system/LimeFriend_64.png" size="64"/>
+	<icon path="assets/system/LimeFriend_128.png" size="128"/>
+	<icon path="assets/system/LimeFriend_600.png" size="600"/>
+</project>
