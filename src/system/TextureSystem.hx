@@ -71,6 +71,11 @@ class TextureSystem {
 		@param path The texture path.
 	**/
 	static function createTexture(key:String, path:String, disableAntialiasing:Bool = false, premultiply:Bool = false) {
+		if (!sys.FileSystem.exists(path)) {
+			trace("NO EXIST WAAAAAAAAAAAAAAAA");
+			return;
+		}
+
 		if (pool.exists(key)) {
 			return;
 		}

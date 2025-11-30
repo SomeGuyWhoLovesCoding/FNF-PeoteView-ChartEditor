@@ -73,7 +73,7 @@ class ChartUISprite implements Element {
 
 	var OPTIONS = { texRepeatX: true, texRepeatY: false, blend: true };
 
-	var uniformRepeat:UniformFloat;
+	static var uniformRepeat:UniformFloat;
 
 	static function init(program:Program, name:String, texture:Texture) {
 		// creates a texture-layer named "name"
@@ -82,15 +82,15 @@ class ChartUISprite implements Element {
 		program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
 		program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
 
-		var texW = Util.toFloatString(texture.width);
+		uniformRepeat = new UniformFloat("repeatHoriz", 1);
 
 		program.injectIntoFragmentShader('
 			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6) {
-
 				vec2 coord = vTexCoord;
-				coord.x = $texW;
+				coord.x *= repeatHoriz;
+
 				if (gradientMode == 0.0) {
-					return getTextureColor(textureID, vTexCoord);
+					return getTextureColor(textureID, coord);
 				}
 
 				float y = clamp(vTexCoord.y, 0.0, 1.0);
@@ -111,20 +111,19 @@ class ChartUISprite implements Element {
 				// Lerp between current and next color
 				return getTextureColor(textureID, coord) * mix(colors[segment], colors[segment + 1], t);
 			}
-		');
+		', [uniformRepeat]);
 
-		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6, w) * (c * alphaColor)');
+		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6) * (c * alphaColor)');
 	}
 
 	function new() {
-		uniformFloat = new UniformFloat("repeatHoriz", w / clipWidth);
 	}
 
     inline function changeID(id:Int) {
 		var wValue:Float = 36.0;
-		var hValue:Float = 40.0;
+		var hValue:Float = id == 0 ? 40.0 : 36.0;
 		var xValue:Float = 0.0;
-		var yValue:Float = 0.0;
+		var yValue:Float = id == 0 ? 0.0 : 2.0;
 
 		xValue += id * wValue;
 
@@ -144,6 +143,8 @@ class ChartUISprite implements Element {
 		/*clipWidth = 36;
 		clipSizeX = 1 / (wValue / 36);*/
 		w = wValue;
+		uniformRepeat.value = w / clipWidth;
+		//trace(uniformRepeat.value);
 		//trace(wValue, clipSizeX);
 	}
 }
