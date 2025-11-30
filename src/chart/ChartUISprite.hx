@@ -73,6 +73,8 @@ class ChartUISprite implements Element {
 
 	var OPTIONS = { texRepeatX: true, texRepeatY: false, blend: true };
 
+	var uniformRepeat:UniformFloat;
+
 	static function init(program:Program, name:String, texture:Texture) {
 		// creates a texture-layer named "name"
 		program.setTexture(texture, name, true);
@@ -84,10 +86,14 @@ class ChartUISprite implements Element {
 
 		program.injectIntoFragmentShader('
 			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6) {
-				float y = clamp(vTexCoord.y, 0.0, 1.0);
+
+				vec2 coord = vTexCoord;
+				coord.x = $texW;
 				if (gradientMode == 0.0) {
 					return getTextureColor(textureID, vTexCoord);
 				}
+
+				float y = clamp(vTexCoord.y, 0.0, 1.0);
 
 				// Scale to [0..5]
 				float fy = y * 5.0;
@@ -102,18 +108,17 @@ class ChartUISprite implements Element {
 				colors[4] = c5;
 				colors[5] = c6;
 
-				vac2 coord = vTexCoord;
-				coord.x /= w / $texW;
-
 				// Lerp between current and next color
-				return getTextureColor(textureID, vTexCoord) * mix(colors[segment], colors[segment + 1], t);
+				return getTextureColor(textureID, coord) * mix(colors[segment], colors[segment + 1], t);
 			}
 		');
 
-		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6) * (c * alphaColor)');
+		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6, w) * (c * alphaColor)');
 	}
 
-	function new() {}
+	function new() {
+		uniformFloat = new UniformFloat("repeatHoriz", w / clipWidth);
+	}
 
     inline function changeID(id:Int) {
 		var wValue:Float = 36.0;
