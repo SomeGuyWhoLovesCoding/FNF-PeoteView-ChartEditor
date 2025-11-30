@@ -57,6 +57,7 @@ class ChartUISprite implements Element {
 
 	@varying @custom private var _flip:Float = 0.0;
 	@varying @custom var gradientMode:Float = 0.0;
+	@texTile var tile:Int = 0;
 
 	var flip(get, set):Bool;
 
@@ -79,6 +80,7 @@ class ChartUISprite implements Element {
 		program.blendEnabled = true;
 		program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
 		program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
+		texture.tilesX = 4;
 
 		program.injectIntoFragmentShader('
 			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6) {
@@ -111,28 +113,25 @@ class ChartUISprite implements Element {
 	function new() {}
 
     inline function changeID(id:Int) {
-		var wValue:Float = 36;
-		var hValue:Float = 40;
-		var xValue:Float = 0;
-		var yValue:Float = 0;
-
-		xValue += id * wValue;
+		var wValue:Float = 36.0;
+		var hValue:Float = 40.0;
 
 		if ((w != wValue && clipWidth != wValue && clipSizeX != wValue) && (h != hValue && clipHeight != hValue && clipHeight != hValue)) {
 			w = clipWidth = clipSizeX = wValue;
 			h = clipHeight = clipSizeY = hValue;
 		}
 
-		clipX = xValue;
-		clipY = yValue;
+		tile = id;
 
 		curID = id;
     }
 
 	function stretch_w(wValue:Float) {
+		//w = wValue;
+		/*clipWidth = 36;
+		clipSizeX = 1 / (wValue / 36);*/
+		//clipWidth = wValue;
 		w = wValue;
-		clipWidth = 36;
-		clipSizeX = 36 / wValue;
-		//Sys.println(clipSizeX);
+		//trace(wValue, clipSizeX);
 	}
 }
