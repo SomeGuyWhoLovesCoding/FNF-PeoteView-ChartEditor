@@ -12,17 +12,7 @@ class ChartUISprite implements Element {
 	@sizeX @formula("(_flip != 0.0 ? -w : w)") var w:Float = 0.0;
 	@sizeY var h:Float = 0.0;
 
-	// extra tex attributes for clipping
-	@texX var clipX:Float = 0.0;
-	@texY var clipY:Float = 0.0;
-	@texW var clipWidth:Float = 200.0;
-	@texH var clipHeight:Float = 200.0;
-
-	// extra tex attributes to adjust texture within the clip
-	@texPosX  var clipPosX:Float = 0.0;
-	@texPosY  var clipPosY:Float = 0.0;
-	@texSizeX var clipSizeX:Float = 200.0;
-	@texSizeY var clipSizeY:Float = 200.0;
+	@tile var tileId:Int = 0;
 
 	@color var c:Color = 0xFFFFFFFF;
 	@color var c1:Color = 0xFFFFFFFF;
@@ -77,6 +67,7 @@ class ChartUISprite implements Element {
 
 	static function init(program:Program, name:String, texture:Texture) {
 		// creates a texture-layer named "name"
+		texture.tilesX = 4;
 		program.setTexture(texture, name, true);
 		program.blendEnabled = true;
 		program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
@@ -117,23 +108,12 @@ class ChartUISprite implements Element {
 	}
 
 	function new() {
+		w = 36;
+		h = 40;
 	}
 
     inline function changeID(id:Int) {
-		var wValue:Float = 36.0;
-		var hValue:Float = id == 0 ? 40.0 : 36.0;
-		var xValue:Float = 0.0;
-		var yValue:Float = id == 0 ? 0.0 : 2.0;
-
-		xValue += id * wValue;
-
-		if ((w != wValue && clipWidth != wValue && clipSizeX != wValue) && (h != hValue && clipHeight != hValue && clipHeight != hValue)) {
-			w = clipWidth = clipSizeX = wValue;
-			h = clipHeight = clipSizeY = hValue;
-		}
-
-		clipX = xValue;
-		clipY = yValue;
+		tileId = id;
 
 		curID = id;
     }
@@ -143,7 +123,7 @@ class ChartUISprite implements Element {
 		/*clipWidth = 36;
 		clipSizeX = 1 / (wValue / 36);*/
 		w = wValue;
-		uniformRepeat.value = w / clipWidth;
+		//uniformRepeat.value = w / clipWidth;
 		//trace(uniformRepeat.value);
 		//trace(wValue, clipSizeX);
 	}
