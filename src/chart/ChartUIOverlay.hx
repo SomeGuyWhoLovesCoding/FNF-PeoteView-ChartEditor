@@ -43,7 +43,8 @@ class ChartUIOverlay {
 		//trace(underlyingData);
 	}
 
-	inline function open() {
+	function open() {
+		if (opened) return;
 		active = opened = true;
 
 		if (!uiProg.isIn(display)) {
@@ -55,7 +56,8 @@ class ChartUIOverlay {
 		window.onMouseDown.add(controlState_mouse);
 	}
 
-	inline function close() {
+	function close() {
+		if (!opened) return;
 		active = opened = false;
 
 		if (uiProg.isIn(display)) {
@@ -164,6 +166,18 @@ class ChartUIOverlay {
 				underlyingData.activetabparent--;
 			case KeyCode.RIGHT:
 				underlyingData.activetabparent++;
+			case KeyCode.DOWN:
+				currentMenu--;
+				if ((currentMenu:Int) < 0) {
+					currentMenu = ChartUIMenu.AUTOSAVED_TABS;
+				}
+				tabGrpSectionYLerp = tabGrpSectionY = 0;
+			case KeyCode.UP:
+				currentMenu++;
+				if ((currentMenu:Int) >= (ChartUIMenu.MENUS_TOTAL:Int)) {
+					currentMenu = ChartUIMenu.CURRENT_TABS;
+				}
+				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			default:
 		}
 
@@ -186,12 +200,15 @@ class ChartUIOverlay {
 			case ChartUIMenu.CURRENT_TABS:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
+				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			case ChartUIMenu.RECENTLY_CLOSED_TABS:
 				tabs = underlyingData.recentlyclosedtabs;
 				tabbarcolor = "166E89";
+				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			case ChartUIMenu.AUTOSAVED_TABS:
 				tabs = underlyingData.recentlyclosedtabs;
 				tabbarcolor = "CCC816"; // was going to be 898716
+				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			default:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
@@ -226,33 +243,35 @@ class ChartUIOverlay {
 
 	var tabGrpSectionY(default, null):Float;
 	var tabGrpSectionYLerp(default, null):Float;
-	function updateMainParts(deltaTime:Float) {
-		var ratio = Math.min(deltaTime * 0.015, 1.0);
-		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
-
-		tabGrpSectionYLerp = Tools.lerp(tabGrpSectionYLerp, tabGrpSectionY, ratio);
-
+	function updateMainParts(deltaTime:Float, closeTabGrpBar:Bool = false) {
 		var tabs:Array<ChartUIData.ChartTab> = null;
 		var tabbarcolor:String = "FFFFFF";
+
+		var ratio = Math.min(deltaTime * 0.015, 1.0);
+		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
 
 		switch (currentMenu) {
 			case ChartUIMenu.CURRENT_TABS:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
 			case ChartUIMenu.RECENTLY_CLOSED_TABS:
+				if (underlyingData.recentlyclosedtabs == null) underlyingData.recentlyclosedtabs = [];
 				tabs = underlyingData.recentlyclosedtabs;
 				tabbarcolor = "166E89";
 			case ChartUIMenu.AUTOSAVED_TABS:
-				tabs = underlyingData.recentlyclosedtabs;
+				if (underlyingData.autosavedtabs == null) underlyingData.autosavedtabs = [];
+				tabs = underlyingData.autosavedtabs;
 				tabbarcolor = "CCC816"; // was going to be 898716
 			default:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
 		}
 
+		tabGrpSectionYLerp = Tools.lerp(tabGrpSectionYLerp, tabGrpSectionY, ratio);
+
 		var peoteView = Main.current.peoteView;
 		var tab = tabs[underlyingData.activetabparent];
-		var isTabGrp = tab?.links.length != 1;
+		var isTabGrp = tab?.links.length >= 2;
 		var tabGrp = tab?.links[underlyingData.activetabchild];
 		if (background != null) {
 			background.stretch_w(peoteView.width);
@@ -267,7 +286,7 @@ class ChartUIOverlay {
 				tabGrpBackground.stretch_w(peoteView.width);
 				tabGrpSectionY = !isTabGrp ? 0 : tabGrpY;
 				tabGrpBackground.y = tabGrpSectionYLerp;
-				tabGrpBackground.c = Tools.hexesToOpaqueColor(tabGrp.color)[0];
+				tabGrpBackground.c = Tools.hexesToOpaqueColor(tabGrp?.color)[0];
 				background.c = Tools.hexesToOpaqueColor([tabbarcolor])[0];
 				uiBuf.updateElement(tabGrpBackground);
 			}
@@ -288,26 +307,24 @@ class ChartUIOverlay {
 						icon.y = -99999;
 					}
 					uiBuf.updateElement(icon);
-					if (tabGrpBackground != null && tabGrpIcons != null) {
-						for (i in 0...tabGrpIcons.length) {
-							var icon = tabGrpIcons[i];
-							if (tab != null) {
-								var tabLink = tab.links[i];
-								if (tabLink != null && isTabGrp) {
-									icon.x = (leftButton.x + 4) + (i * (icon.w + 4));
-									icon.y = tabGrpBackground.y + 2;
-									icon.changeID(1); // tabLink.path
-									var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
-									var cols = Tools.convertToSixColors(hexToColor);
-									icon.setAllColors(cols);
-								} else {
-									icon.x = -99999;
-									icon.y = -99999;
-								}
-								uiBuf.updateElement(icon);
-							}
-						}
+				}
+			}
+			if (tabGrpBackground != null && tabGrpIcons != null) {
+				for (i in 0...tabGrpIcons.length) {
+					var icon = tabGrpIcons[i];
+					var tabLink = tab?.links[i];
+					if (tabLink != null && isTabGrp) {
+						icon.x = (leftButton.x + 4) + (i * (icon.w + 4));
+						icon.y = tabGrpBackground.y + 2;
+						icon.changeID(1); // tabLink.path
+						var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
+						var cols = Tools.convertToSixColors(hexToColor);
+						icon.setAllColors(cols);
+					} else {
+						icon.x = -99999;
+						icon.y = -99999;
 					}
+					uiBuf.updateElement(icon);
 				}
 			}
 		}
