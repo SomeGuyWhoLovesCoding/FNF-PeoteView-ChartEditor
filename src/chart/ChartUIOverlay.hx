@@ -150,6 +150,7 @@ class ChartUIOverlay {
 					currentMenu = ChartUIMenu.CURRENT_TABS;
 				}
 				tabGrpAppearLerp = tapGrpAppear = 0;
+				underlyingData.activetabchild = 0;
 			}
 			if (uiBuf != null)
 				uiBuf.addElement(leftButton);
@@ -208,11 +209,20 @@ class ChartUIOverlay {
 						if (underlyingData.activetabparent < 0) {
 							underlyingData.activetabparent = tabsLen - 1;
 						}
+						if (underlyingData.activetabchild < 0) {
+							underlyingData.activetabchild = linksInTab - 1;
+						}
+						if (underlyingData.activetabchild >= linksInTab) {
+							underlyingData.activetabchild = 0;
+						}
 					case KeyModifier.LEFT_SHIFT | KeyModifier.RIGHT_SHIFT:
 						underlyingData.activetabchild--;
 						if (underlyingData.activetabchild < 0) {
 							underlyingData.activetabchild = linksInTab - 1;
 						}
+					case KeyModifier.LEFT_ALT | KeyModifier.RIGHT_ALT:
+						tabGrp_scrollX--;
+						if (tabGrp_scrollX < 0) tabGrp_scrollX = 0;
 					default:
 						scrollX--;
 						if (scrollX < 0) scrollX = 0;
@@ -224,11 +234,22 @@ class ChartUIOverlay {
 						if (underlyingData.activetabparent >= tabsLen) {
 							underlyingData.activetabparent = 0;
 						}
+						if (underlyingData.activetabchild < 0) {
+							underlyingData.activetabchild = linksInTab - 1;
+						}
+						if (underlyingData.activetabchild >= linksInTab) {
+							underlyingData.activetabchild = 0;
+						}
 					case KeyModifier.LEFT_SHIFT | KeyModifier.RIGHT_SHIFT:
 						underlyingData.activetabchild++;
 						if (underlyingData.activetabchild >= linksInTab) {
 							underlyingData.activetabchild = 0;
 						}
+					case KeyModifier.LEFT_ALT | KeyModifier.RIGHT_ALT:
+						tabGrp_scrollX++;
+						var iconsLen = linksInTab - tabGrpIcons?.length;
+						if (iconsLen < 0) iconsLen = 0;
+						if (tabGrp_scrollX >= iconsLen) tabGrp_scrollX = iconsLen;
 					default:
 						scrollX++;
 						var iconsLen = tabsLen - icons?.length;
@@ -241,12 +262,14 @@ class ChartUIOverlay {
 					currentMenu = ChartUIMenu.AUTOSAVED_TABS;
 				}
 				tabGrpAppearLerp = tapGrpAppear = 0;
+				underlyingData.activetabchild = 0;
 			case KeyCode.UP:
 				currentMenu++;
 				if ((currentMenu:Int) >= (ChartUIMenu.MENUS_TOTAL:Int)) {
 					currentMenu = ChartUIMenu.CURRENT_TABS;
 				}
 				tabGrpAppearLerp = tapGrpAppear = 0;
+				underlyingData.activetabchild = 0;
 			default:
 		}
 
@@ -300,12 +323,17 @@ class ChartUIOverlay {
 
 	var scrollX(default, null):Float;
 	var scrollXLerp(default, null):Float;
+
+	var tabGrp_scrollX(default, null):Float;
+	var tabGrp_scrollXLerp(default, null):Float;
+
 	function update(deltaTime:Float) {
 		if (!opened) return;
 		var ratio = Math.min(deltaTime * 0.015, 1.0);
 		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
 
 		scrollXLerp = Tools.lerp(scrollXLerp, scrollX, ratio);
+		tabGrp_scrollXLerp = Tools.lerp(tabGrp_scrollXLerp, tabGrp_scrollX, ratio);
 	}
 
 	function render(deltaTime:Float) {
@@ -387,7 +415,7 @@ class ChartUIOverlay {
 					uiBuf.updateElement(icon);
 				}
 				if (icon_visualIndicator != null) {
-					icon_visualIndicator.x = icon_X_formula(underlyingData.activetabparent, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
+					icon_visualIndicator.x = icon_X_formula(underlyingData.activetabparent - scrollXLerp, 0, (leftButton.clipWidth + leftButton.x + 8));
 					//Sys.println('$scrollX,${icon_visualIndicator.x}');
 					icon_visualIndicator.y = 3;
 					icon_visualIndicator.alpha = currentMenu != ChartUIMenu.CURRENT_TABS ? 0.0 : VISUAL_INDICATOR_ALPHA;
@@ -399,7 +427,7 @@ class ChartUIOverlay {
 					var icon = tabGrpIcons[i];
 					var tabLink = tab?.links[i];
 					if (tabLink != null && isTabGrp) {
-						icon.x = icon_X_formula(i, scrollXLerp, (leftButton.x + 4));
+						icon.x = icon_X_formula(i, tabGrp_scrollXLerp, (leftButton.x + 4));
 						icon.y = tabGrpBackground.y + 2;
 						icon.changeID(1); // tabLink.path
 						var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
@@ -412,7 +440,7 @@ class ChartUIOverlay {
 					uiBuf.updateElement(icon);
 				}
 				if (tabGrpIcon_visualIndicator != null) {
-					tabGrpIcon_visualIndicator.x = icon_X_formula(underlyingData.activetabchild, scrollXLerp, (leftButton.x + 4));
+					tabGrpIcon_visualIndicator.x = icon_X_formula(underlyingData.activetabchild - tabGrp_scrollXLerp, 0, (leftButton.x + 4));
 					tabGrpIcon_visualIndicator.alpha = currentMenu != ChartUIMenu.CURRENT_TABS ? 0.0 : (tabGrpAppearLerp / 40.0) * VISUAL_INDICATOR_ALPHA;
 					//Sys.println('$scrollX,${tabGrpIcon_visualIndicator.x}');
 					tabGrpIcon_visualIndicator.y = tabGrpBackground.y + 3;
