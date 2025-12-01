@@ -77,36 +77,36 @@ class ChartUIOverlay {
 		return arr;
 	}
 
-	static function hexToRGB(hex:String):Array<Int> {
+	// This was generated with claude.ai for the lols
+	private var __globalColor_Cache(default, null):Array<Int> = [0, 0, 0]; // prevent any memory leaks (this part was me btw)
+	function hexToRGB(hex:String):Array<Int> {
 		// Remove '#' if present
 		if (hex.charAt(0) == '#') {
 			hex = hex.substr(1);
 		}
 		
-		var r:Int, g:Int, b:Int;
-		
 		if (hex.length == 8) {
 			// Format: AARRGGBB (skip alpha)
 			var argb = Std.parseInt('0x' + hex);
-			r = (argb >> 16) & 0xFF;
-			g = (argb >> 8) & 0xFF;
-			b = argb & 0xFF;
+			__globalColor_Cache[0] = (argb >> 16) & 0xFF;
+			__globalColor_Cache[1] = (argb >> 8) & 0xFF;
+			__globalColor_Cache[2] = argb & 0xFF;
 		} else if (hex.length == 6) {
 			// Format: RRGGBB
 			var rgb = Std.parseInt('0x' + hex);
-			r = (rgb >> 16) & 0xFF;
-			g = (rgb >> 8) & 0xFF;
-			b = rgb & 0xFF;
+			__globalColor_Cache[0] = (rgb >> 16) & 0xFF;
+			__globalColor_Cache[1] = (rgb >> 8) & 0xFF;
+			__globalColor_Cache[2] = rgb & 0xFF;
 		} else if (hex.length == 3) {
 			// Format: RGB (shorthand)
-			r = Std.parseInt('0x' + hex.charAt(0)) * 17;
-			g = Std.parseInt('0x' + hex.charAt(1)) * 17;
-			b = Std.parseInt('0x' + hex.charAt(2)) * 17;
+			__globalColor_Cache[0] = Std.parseInt('0x' + hex.charAt(0)) * 17;
+			__globalColor_Cache[1] = Std.parseInt('0x' + hex.charAt(1)) * 17;
+			__globalColor_Cache[2] = Std.parseInt('0x' + hex.charAt(2)) * 17;
 		} else {
 			throw "Invalid hex color format";
 		}
 		
-		return [r, g, b];
+		return __globalColor_Cache;
 	}
 
 	inline function open() {
@@ -187,7 +187,7 @@ class ChartUIOverlay {
 						icon.changeID(tab.links.length != 1 ? 2 : 1);
 						var hexToColor = hexesToOpaqueColor(tab.color);
 						var cols = convertToSixColors(hexToColor);
-						if (i == 1) trace(cols);
+						//if (i == 1) trace(cols);
 						icon.setAllColors(cols);
 					} else {
 						icon.x = -99999;
