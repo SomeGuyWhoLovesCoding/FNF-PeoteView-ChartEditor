@@ -119,7 +119,7 @@ class ChartUISprite implements Element {
 			}
 		');
 
-		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6, _width_repeat) * alphaColor');
+		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6, _width_repeat) * (c * alphaColor)');
 	}
 
 	function new() {
