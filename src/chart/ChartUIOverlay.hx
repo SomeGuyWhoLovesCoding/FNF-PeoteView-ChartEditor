@@ -242,7 +242,7 @@ class ChartUIOverlay {
 	static function save() {
 		var underlyingDataString:String;
 		if (underlyingData != null) {
-			underlyingDataString = haxe.Json.stringify(underlyingData);
+			underlyingDataString = haxe.Json.stringify(underlyingData, null, "\t");
 			underlyingData = null;
 			sys.io.File.saveContent("manifest/tabs.json", underlyingDataString);
 		}
