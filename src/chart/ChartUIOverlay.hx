@@ -19,6 +19,9 @@ enum abstract ChartUIMenu(Int) from Int to Int {
 **/
 @:publicFields
 class ChartUIOverlay {
+	// The usual alpha for a simple visual indicator
+	inline static var VISUAL_INDICATOR_ALPHA:Float = 0.3;
+
 	static var uiBuf(default, null):Buffer<ChartUISprite>;
 	static var uiProg(default, null):Program;
 
@@ -33,7 +36,7 @@ class ChartUIOverlay {
 		display = disp;
 
 		if (uiBuf == null) {
-			uiBuf = new Buffer<ChartUISprite>(75);
+			uiBuf = new Buffer<ChartUISprite>(128);
 			uiProg = new Program(uiBuf);
 			var tex = TextureSystem.getTexture("chartUITex");
 			ChartUISprite.init(uiProg, "chartUITex", tex);
@@ -72,10 +75,12 @@ class ChartUIOverlay {
 	static var background(default, null):ChartUISprite;
 	static var icons(default, null):Array<ChartUISprite> = [];
 	static var leftButton(default, null):ChartUISprite;
+	static var icon_visualIndicator(default, null):ChartUISprite;
 
 	// subtab/tab group implementation
 	static var tabGrpBackground(default, null):ChartUISprite;
 	static var tabGrpIcons(default, null):Array<ChartUISprite> = [];
+	static var tabGrpIcon_visualIndicator(default, null):ChartUISprite;
 	var tabGrpY(default, null):Float;
 
 	var currentMenu(default, null):ChartUIMenu = CURRENT_TABS;
@@ -134,6 +139,24 @@ class ChartUIOverlay {
 				uiBuf.addElement(leftButton);
 		}
 
+		if (icon_visualIndicator == null) {
+			icon_visualIndicator = new ChartUISprite();
+			icon_visualIndicator.changeID(1);
+			icon_visualIndicator.c = 0xFFFFFFFF;
+			icon_visualIndicator.alpha = VISUAL_INDICATOR_ALPHA;
+			if (uiBuf != null)
+				uiBuf.addElement(icon_visualIndicator);
+		}
+
+		if (tabGrpIcon_visualIndicator == null) {
+			tabGrpIcon_visualIndicator = new ChartUISprite();
+			tabGrpIcon_visualIndicator.changeID(1);
+			tabGrpIcon_visualIndicator.c = 0xFFFFFFFF;
+			tabGrpIcon_visualIndicator.alpha = VISUAL_INDICATOR_ALPHA;
+			if (uiBuf != null)
+				uiBuf.addElement(tabGrpIcon_visualIndicator);
+		}
+
 		var peoteView = Main.current.peoteView;
 		resize(peoteView.width, peoteView.height);
 	}
@@ -165,8 +188,15 @@ class ChartUIOverlay {
 			case KeyCode.LEFT:
 				switch (keyMod) {
 					case KeyModifier.LEFT_CTRL | KeyModifier.RIGHT_CTRL:
-						Sys.println('ya1');
 						underlyingData.activetabparent--;
+						if (underlyingData.activetabparent < 0) {
+							underlyingData.activetabparent = tabsLen - 1;
+						}
+					case KeyModifier.LEFT_SHIFT | KeyModifier.RIGHT_SHIFT:
+						underlyingData.activetabchild--;
+						if (underlyingData.activetabchild < 0) {
+							underlyingData.activetabchild = linksInTab - 1;
+						}
 					default:
 						scrollX--;
 						if (scrollX < 0) scrollX = 0;
@@ -174,8 +204,15 @@ class ChartUIOverlay {
 			case KeyCode.RIGHT:
 				switch (keyMod) {
 					case KeyModifier.LEFT_CTRL | KeyModifier.RIGHT_CTRL:
-						Sys.println('ya');
 						underlyingData.activetabparent++;
+						if (underlyingData.activetabparent >= tabsLen) {
+							underlyingData.activetabparent = 0;
+						}
+					case KeyModifier.LEFT_SHIFT | KeyModifier.RIGHT_SHIFT:
+						underlyingData.activetabchild++;
+						if (underlyingData.activetabchild >= linksInTab) {
+							underlyingData.activetabchild = 0;
+						}
 					default:
 						scrollX++;
 						var iconsLen = tabsLen - icons?.length;
@@ -187,26 +224,18 @@ class ChartUIOverlay {
 				if ((currentMenu:Int) < 0) {
 					currentMenu = ChartUIMenu.AUTOSAVED_TABS;
 				}
-				tabGrpSectionYLerp = tabGrpSectionY = 0;
+				tabGrpAppearLerp = tapGrpAppear = 0;
 			case KeyCode.UP:
 				currentMenu++;
 				if ((currentMenu:Int) >= (ChartUIMenu.MENUS_TOTAL:Int)) {
 					currentMenu = ChartUIMenu.CURRENT_TABS;
 				}
-				tabGrpSectionYLerp = tabGrpSectionY = 0;
+				tabGrpAppearLerp = tapGrpAppear = 0;
 			default:
 		}
 
-		if (underlyingData.activetabparent < 0) {
-			underlyingData.activetabparent = tabsLen - 1;
-		}
-
-		if (underlyingData.activetabparent >= tabsLen) {
-			underlyingData.activetabparent = 0;
-		}
-
 		//Sys.println(underlyingData.activetabparent);
-		Sys.println('${underlyingData.activetabparent},$scrollX');
+		Sys.println('${underlyingData.activetabchild},$scrollX');
 	}
 
 	function controlState_mouse(mouseX:Float, mouseY:Float, mouseButton:MouseButton) {
@@ -217,15 +246,15 @@ class ChartUIOverlay {
 			case ChartUIMenu.CURRENT_TABS:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
-				tabGrpSectionYLerp = tabGrpSectionY = 0;
+				tabGrpAppearLerp = tapGrpAppear = 0;
 			case ChartUIMenu.RECENTLY_CLOSED_TABS:
 				tabs = underlyingData.recentlyclosedtabs;
 				tabbarcolor = "166E89";
-				tabGrpSectionYLerp = tabGrpSectionY = 0;
+				tabGrpAppearLerp = tapGrpAppear = 0;
 			case ChartUIMenu.AUTOSAVED_TABS:
 				tabs = underlyingData.autosavedtabs;
 				tabbarcolor = "CCC816"; // was going to be 898716
-				tabGrpSectionYLerp = tabGrpSectionY = 0;
+				tabGrpAppearLerp = tapGrpAppear = 0;
 			default:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
@@ -240,7 +269,7 @@ class ChartUIOverlay {
 		var tabsInGrpCur = tabCur?.links[activetabingrp];
 	}
 
-	var scrollX(default, null):Float;
+	var scrollX(default, null):Int;
 	var scrollXLerp(default, null):Float;
 	function update(deltaTime:Float) {
 		if (!opened) return;
@@ -257,8 +286,13 @@ class ChartUIOverlay {
 		}
 	}
 
-	var tabGrpSectionY(default, null):Float;
-	var tabGrpSectionYLerp(default, null):Float;
+	function icon_X_formula(i:Int, lerpVal:Float, xOffset:Float) {
+		//Sys.println('$xOffset + ($i * 40) - Std.int($lerpVal * 40.0) % 40)');
+		return (xOffset + (i * 40)) - (Std.int(lerpVal * 40.0) % 40);
+	}
+
+	var tapGrpAppear(default, null):Float;
+	var tabGrpAppearLerp(default, null):Float;
 	function updateMainParts(deltaTime:Float, closeTabGrpBar:Bool = false) {
 		var tabs:Array<ChartUIData.ChartTab> = null;
 		var tabbarcolor:String = "FFFFFF";
@@ -283,7 +317,7 @@ class ChartUIOverlay {
 				tabbarcolor = underlyingData.color;
 		}
 
-		tabGrpSectionYLerp = Tools.lerp(tabGrpSectionYLerp, tabGrpSectionY, ratio);
+		tabGrpAppearLerp = Tools.lerp(tabGrpAppearLerp, tapGrpAppear, ratio);
 
 		var peoteView = Main.current.peoteView;
 		var tab = tabs[underlyingData.activetabparent];
@@ -300,10 +334,9 @@ class ChartUIOverlay {
 			}
 			if (tabGrpBackground != null) {
 				tabGrpBackground.stretch_w(peoteView.width);
-				tabGrpSectionY = !isTabGrp ? 0 : tabGrpY;
-				tabGrpBackground.y = tabGrpSectionYLerp;
-				tabGrpBackground.c = Tools.hexesToOpaqueColor(tabGrp?.color)[0];
-				background.c = Tools.hexesToOpaqueColor([tabbarcolor])[0];
+				tapGrpAppear = !isTabGrp ? 0 : tabGrpY;
+				tabGrpBackground.y = tabGrpAppearLerp;
+				tabGrpBackground.c = Tools.hexesToOpaqueColor(tab?.color)[0];
 				uiBuf.updateElement(tabGrpBackground);
 			}
 			if (icons != null) {
@@ -312,7 +345,7 @@ class ChartUIOverlay {
 					var tab = tabs[i + Std.int(scrollXLerp)];
 					var isTabAGrp = tab?.links.length != 1;
 					if (tab != null) {
-						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4)) - (Std.int(scrollXLerp * 40.0) % 40);
+						icon.x = icon_X_formula(i, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
 						icon.y = 2;
 						icon.changeID(isTabAGrp ? 2 : 1);
 						var hexToColor = Tools.hexesToOpaqueColor(tab.color);
@@ -324,13 +357,19 @@ class ChartUIOverlay {
 					}
 					uiBuf.updateElement(icon);
 				}
+				if (icon_visualIndicator != null) {
+					icon_visualIndicator.x = icon_X_formula(underlyingData.activetabparent, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
+					Sys.println('$scrollX,${icon_visualIndicator.x}');
+					icon_visualIndicator.y = 3;
+					uiBuf.updateElement(icon_visualIndicator);
+				}
 			}
 			if (tabGrpBackground != null && tabGrpIcons != null) {
 				for (i in 0...tabGrpIcons.length) {
 					var icon = tabGrpIcons[i];
 					var tabLink = tab?.links[i];
 					if (tabLink != null && isTabGrp) {
-						icon.x = (leftButton.x + 4) + (i * (icon.w + 4));
+						icon.x = icon_X_formula(i, scrollXLerp, (leftButton.x + 4));
 						icon.y = tabGrpBackground.y + 2;
 						icon.changeID(1); // tabLink.path
 						var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
@@ -341,6 +380,13 @@ class ChartUIOverlay {
 						icon.y = -99999;
 					}
 					uiBuf.updateElement(icon);
+				}
+				if (tabGrpIcon_visualIndicator != null) {
+					tabGrpIcon_visualIndicator.x = icon_X_formula(underlyingData.activetabchild, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
+					tabGrpIcon_visualIndicator.alpha = (tabGrpAppearLerp / 40.0) * VISUAL_INDICATOR_ALPHA;
+					//Sys.println('$scrollX,${tabGrpIcon_visualIndicator.x}');
+					tabGrpIcon_visualIndicator.y = tabGrpBackground.y + 3;
+					uiBuf.updateElement(tabGrpIcon_visualIndicator);
 				}
 			}
 		}
