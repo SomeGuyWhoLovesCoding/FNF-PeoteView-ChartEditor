@@ -21,6 +21,7 @@ enum abstract ChartUIMenu(Int) from Int to Int {
 class ChartUIOverlay {
 	// The usual alpha for a simple visual indicator
 	inline static var VISUAL_INDICATOR_ALPHA:Float = 0.3;
+	inline static var VISUAL_INDICATOR_COLOR:Color = Color.BLACK;
 
 	static var uiBuf(default, null):Buffer<ChartUISprite>;
 	static var uiProg(default, null):Program;
@@ -142,7 +143,7 @@ class ChartUIOverlay {
 		if (icon_visualIndicator == null) {
 			icon_visualIndicator = new ChartUISprite();
 			icon_visualIndicator.changeID(1);
-			icon_visualIndicator.c = 0xFFFFFFFF;
+			icon_visualIndicator.c = VISUAL_INDICATOR_COLOR;
 			icon_visualIndicator.alpha = VISUAL_INDICATOR_ALPHA;
 			if (uiBuf != null)
 				uiBuf.addElement(icon_visualIndicator);
@@ -151,7 +152,7 @@ class ChartUIOverlay {
 		if (tabGrpIcon_visualIndicator == null) {
 			tabGrpIcon_visualIndicator = new ChartUISprite();
 			tabGrpIcon_visualIndicator.changeID(1);
-			tabGrpIcon_visualIndicator.c = 0xFFFFFFFF;
+			tabGrpIcon_visualIndicator.c = VISUAL_INDICATOR_COLOR;
 			tabGrpIcon_visualIndicator.alpha = VISUAL_INDICATOR_ALPHA;
 			if (uiBuf != null)
 				uiBuf.addElement(tabGrpIcon_visualIndicator);
@@ -235,7 +236,7 @@ class ChartUIOverlay {
 		}
 
 		//Sys.println(underlyingData.activetabparent);
-		Sys.println('${underlyingData.activetabchild},$scrollX');
+		//Sys.println('${underlyingData.activetabchild},$scrollX');
 	}
 
 	function controlState_mouse(mouseX:Float, mouseY:Float, mouseButton:MouseButton) {
@@ -269,7 +270,7 @@ class ChartUIOverlay {
 		var tabsInGrpCur = tabCur?.links[activetabingrp];
 	}
 
-	var scrollX(default, null):Int;
+	var scrollX(default, null):Float;
 	var scrollXLerp(default, null):Float;
 	function update(deltaTime:Float) {
 		if (!opened) return;
@@ -286,7 +287,7 @@ class ChartUIOverlay {
 		}
 	}
 
-	function icon_X_formula(i:Int, lerpVal:Float, xOffset:Float) {
+	function icon_X_formula(i:Float, lerpVal:Float, xOffset:Float) {
 		//Sys.println('$xOffset + ($i * 40) - Std.int($lerpVal * 40.0) % 40)');
 		return (xOffset + (i * 40)) - (Std.int(lerpVal * 40.0) % 40);
 	}
@@ -359,7 +360,7 @@ class ChartUIOverlay {
 				}
 				if (icon_visualIndicator != null) {
 					icon_visualIndicator.x = icon_X_formula(underlyingData.activetabparent, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
-					Sys.println('$scrollX,${icon_visualIndicator.x}');
+					//Sys.println('$scrollX,${icon_visualIndicator.x}');
 					icon_visualIndicator.y = 3;
 					uiBuf.updateElement(icon_visualIndicator);
 				}
@@ -382,7 +383,7 @@ class ChartUIOverlay {
 					uiBuf.updateElement(icon);
 				}
 				if (tabGrpIcon_visualIndicator != null) {
-					tabGrpIcon_visualIndicator.x = icon_X_formula(underlyingData.activetabchild, scrollXLerp, (leftButton.clipWidth + leftButton.x + 8));
+					tabGrpIcon_visualIndicator.x = icon_X_formula(underlyingData.activetabchild, scrollXLerp, (leftButton.x + 4));
 					tabGrpIcon_visualIndicator.alpha = (tabGrpAppearLerp / 40.0) * VISUAL_INDICATOR_ALPHA;
 					//Sys.println('$scrollX,${tabGrpIcon_visualIndicator.x}');
 					tabGrpIcon_visualIndicator.y = tabGrpBackground.y + 3;
