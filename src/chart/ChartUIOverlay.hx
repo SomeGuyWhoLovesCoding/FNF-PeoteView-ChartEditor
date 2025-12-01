@@ -148,7 +148,7 @@ class ChartUIOverlay {
 			case ChartUIMenu.RECENTLY_CLOSED_TABS:
 				tabs = underlyingData.recentlyclosedtabs;
 			case ChartUIMenu.AUTOSAVED_TABS:
-				tabs = underlyingData.recentlyclosedtabs;
+				tabs = underlyingData.autosavedtabs;
 			default:
 				tabs = underlyingData.tabs;
 		}
@@ -206,7 +206,7 @@ class ChartUIOverlay {
 				tabbarcolor = "166E89";
 				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			case ChartUIMenu.AUTOSAVED_TABS:
-				tabs = underlyingData.recentlyclosedtabs;
+				tabs = underlyingData.autosavedtabs;
 				tabbarcolor = "CCC816"; // was going to be 898716
 				tabGrpSectionYLerp = tabGrpSectionY = 0;
 			default:
@@ -261,7 +261,7 @@ class ChartUIOverlay {
 			case ChartUIMenu.AUTOSAVED_TABS:
 				if (underlyingData.autosavedtabs == null) underlyingData.autosavedtabs = [];
 				tabs = underlyingData.autosavedtabs;
-				tabbarcolor = "CCC816"; // was going to be 898716
+				tabbarcolor = "CCC816";
 			default:
 				tabs = underlyingData.tabs;
 				tabbarcolor = underlyingData.color;
