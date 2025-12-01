@@ -22,6 +22,7 @@ class ChartUIOverlay {
 	// The usual alpha for a simple visual indicator
 	inline static var VISUAL_INDICATOR_ALPHA:Float = 0.3;
 	inline static var VISUAL_INDICATOR_COLOR:Color = Color.BLACK;
+	inline static var NUM_ICON_ELEMENTS:Int = 32;
 
 	static var uiBuf(default, null):Buffer<ChartUISprite>;
 	static var uiProg(default, null):Program;
@@ -106,7 +107,7 @@ class ChartUIOverlay {
 				uiBuf.addElement(tabGrpBackground);
 		}
 
-		for (i in 0...36) {
+		for (i in 0...NUM_ICON_ELEMENTS) {
 			var icon = tabGrpIcons[i] = new ChartUISprite();
 			icon.y = tabGrpY;
 			icon.gradientMode = 1;
@@ -126,7 +127,7 @@ class ChartUIOverlay {
 				uiBuf.addElement(background);
 		}
 
-		for (i in 0...36) {
+		for (i in 0...NUM_ICON_ELEMENTS) {
 			var icon = icons[i] = new ChartUISprite();
 			icon.gradientMode = 1;
 			var cols = Tools.convertToSixColors(colors);
@@ -247,12 +248,12 @@ class ChartUIOverlay {
 						}
 					case KeyModifier.LEFT_ALT | KeyModifier.RIGHT_ALT:
 						tabGrp_scrollX++;
-						var iconsLen = linksInTab - tabGrpIcons?.length;
+						var iconsLen = linksInTab - tabGrpIcons?.length + 1;
 						if (iconsLen < 0) iconsLen = 0;
 						if (tabGrp_scrollX >= iconsLen) tabGrp_scrollX = iconsLen;
 					default:
 						scrollX++;
-						var iconsLen = tabsLen - icons?.length;
+						var iconsLen = tabsLen - icons?.length + 1;
 						if (iconsLen < 0) iconsLen = 0;
 						if (scrollX >= iconsLen) scrollX = iconsLen;
 				}
