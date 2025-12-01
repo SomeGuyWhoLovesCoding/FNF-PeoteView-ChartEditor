@@ -1,11 +1,15 @@
 package chart;
 
+/**
+ * This class handles all of the visual elements and stuff, all combined into one spritesheet which is onlt 144x40.
+**/
 @:publicFields
 class ChartUIOverlay {
 	static var uiBuf(default, null):Buffer<ChartUISprite>;
 	static var uiProg(default, null):Program;
 
 	static var display(default, null):CustomDisplay;
+	static var underlyingData(default, null):ChartUIData;
 
 	var active:Bool = false;
 
@@ -20,9 +24,13 @@ class ChartUIOverlay {
 			var tex = TextureSystem.getTexture("chartUITex");
 			ChartUISprite.init(uiProg, "chartUITex", tex);
 		}
+
+		underlyingData = haxe.Json.parse(sys.io.File.getContent("manifest/tabs.json"));
+		trace(underlyingData);
 	}
 
 	function convertToSixColors(col:Array<Int>) {
+		if (col == null) return [for (i in 0...6) 0];
 		var arr:Array<Int> = [for (i in 0...6) 0];
 		switch (col.length) {
 			case 1:
@@ -48,6 +56,22 @@ class ChartUIOverlay {
 				}
 			default:
 				arr = col;
+		}
+		return arr;
+	}
+
+	// WIP!
+	// Right now this results in incorrect colors so please be patient while this is fixed!
+	function hexesToOpaqueColor(col:Array<String>) {
+		if (col == null) return [for (i in 0...6) 0];
+		var arr:Array<Int> = [];
+		for (i in 0...col.length) {
+			var actualColor = Std.parseInt("0x" + col[i]);
+			var r = (actualColor >> 16) & 0xFF;
+			var g = (actualColor >> 8) & 0xFF;
+			var b = actualColor & 0xFF;
+			var argbColor = (0xFF << 24) | (r << 16) | (g << 8) | b;
+			arr.push(argbColor);
 		}
 		return arr;
 	}
@@ -81,7 +105,7 @@ class ChartUIOverlay {
 				uiBuf.addElement(background);
 		}
 
-		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // placeholder color array
+		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // was a placeholder color array, now is being used for nothing cuz they'll all be rendered out as the current visual representation of tabs.json
 
 		for (i in 0...36) {
 			var icon = icons[i] = new ChartUISprite();
@@ -123,8 +147,19 @@ class ChartUIOverlay {
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
-					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
-					icon.y = 2;
+					var tab = underlyingData.tabs[i];
+					if (tab != null) {
+						icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
+						icon.y = 2;
+						icon.changeID(tab.links.length != 1 ? 2 : 1);
+						var hexToColor = hexesToOpaqueColor(tab.color);
+						var cols = convertToSixColors(hexToColor);
+						if (i == 0) trace(cols);
+						icon.setAllColors(cols);
+					} else {
+						icon.x = -99999;
+						icon.y = -99999;
+					}
 					uiBuf.updateElement(icon);
 				}
 			}
@@ -145,6 +180,15 @@ class ChartUIOverlay {
 					uiBuf.updateElement(icon);
 				}
 			}
+		}
+	}
+
+	static function save() {
+		var underlyingDataString:String;
+		if (underlyingData != null) {
+			underlyingDataString = haxe.Json.stringify(underlyingData);
+			underlyingData = null;
+			sys.io.File.saveContent("manifest/tabs.json", underlyingDataString);
 		}
 	}
 }

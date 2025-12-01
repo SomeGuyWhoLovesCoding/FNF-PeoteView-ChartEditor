@@ -2,6 +2,9 @@
 
 package chart;
 
+/**
+ * This class handle the basic element of a `ChartUIOverlay`, engineered in a very specific way that is very clever otherwise.
+**/
 @:publicFields
 class ChartUISprite implements Element {
 	// position in pixel (relative to upper left corner of Display)

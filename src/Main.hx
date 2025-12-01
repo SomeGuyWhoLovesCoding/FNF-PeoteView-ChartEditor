@@ -78,6 +78,7 @@ class Main extends Application
 			window.onResize.add(resize);
 			window.onKeyDown.add(openChartEditorUI);
 			window.onClose.add(Chart.destroy);
+			window.onClose.add(ChartUIOverlay.save);
 
 			#if FV_DEBUG
 			DeveloperStuff.init(window, this);
