@@ -180,7 +180,7 @@ class ChartUIOverlay {
 						scrollX++;
 						var iconsLen = tabsLen - icons?.length;
 						if (iconsLen < 0) iconsLen = 0;
-						if (scrollX >= iconsLen) scrollX = iconsLen - 1;
+						if (scrollX >= iconsLen) scrollX = iconsLen;
 				}
 			case KeyCode.DOWN:
 				currentMenu--;
@@ -206,6 +206,7 @@ class ChartUIOverlay {
 		}
 
 		//Sys.println(underlyingData.activetabparent);
+		Sys.println('${underlyingData.activetabparent},$scrollX');
 	}
 
 	function controlState_mouse(mouseX:Float, mouseY:Float, mouseButton:MouseButton) {
