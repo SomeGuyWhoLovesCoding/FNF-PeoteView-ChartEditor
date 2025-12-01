@@ -82,7 +82,16 @@ class ChartUISprite implements Element {
 
 	var OPTIONS = { texRepeatX: true, texRepeatY: false, blend: true };
 
-	static var uniformRepeat:UniformFloat;
+	var _mouse_click_chart_id:Int;
+
+	var mouseCallback:(ChartUISprite, Float, Float, Int)->Void;
+	function execute_mouse_callback(mouseX:Float, mouseY:Float) {
+		if (mouseX > x && mouseX < x + w &&
+			mouseY > y && mouseY < y + h) {
+			if (mouseCallback != null)
+				mouseCallback(this, mouseX, mouseY, _mouse_click_chart_id);
+		}
+	}
 
 	static function init(program:Program, name:String, texture:Texture) {
 		// creates a texture-layer named "name"
