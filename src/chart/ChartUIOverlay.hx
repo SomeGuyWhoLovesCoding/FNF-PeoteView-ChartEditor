@@ -67,21 +67,46 @@ class ChartUIOverlay {
 		var arr:Array<Int> = [];
 		for (i in 0...col.length) {
 			var str = col[i];
-			//for (i in 0...6) {
-				var char = str.charAt(i);
-				var hexDigits = Color.getHexDigit(str.charAt(0)) >>
-				Color.getHexDigit(str.charAt(1)) >>
-				Color.getHexDigit(str.charAt(2)) >>
-				Color.getHexDigit(str.charAt(3)) >>
-				Color.getHexDigit(str.charAt(4)) >>
-				Color.getHexDigit(str.charAt(5));
-				if (i > str.length) throw "NOOOOOOOO";
-			//}
+			var hexStr = hexToRGB(str);
 			var argbColor:Color = Color.WHITE;
-			argbColor.setRGB(hexDigits);
+			argbColor.r = hexStr[0];
+			argbColor.g = hexStr[1];
+			argbColor.b = hexStr[2];
 			arr.push((argbColor:Int));
 		}
 		return arr;
+	}
+
+	static function hexToRGB(hex:String):Array<Int> {
+		// Remove '#' if present
+		if (hex.charAt(0) == '#') {
+			hex = hex.substr(1);
+		}
+		
+		var r:Int, g:Int, b:Int;
+		
+		if (hex.length == 8) {
+			// Format: AARRGGBB (skip alpha)
+			var argb = Std.parseInt('0x' + hex);
+			r = (argb >> 16) & 0xFF;
+			g = (argb >> 8) & 0xFF;
+			b = argb & 0xFF;
+		} else if (hex.length == 6) {
+			// Format: RRGGBB
+			var rgb = Std.parseInt('0x' + hex);
+			r = (rgb >> 16) & 0xFF;
+			g = (rgb >> 8) & 0xFF;
+			b = rgb & 0xFF;
+		} else if (hex.length == 3) {
+			// Format: RGB (shorthand)
+			r = Std.parseInt('0x' + hex.charAt(0)) * 17;
+			g = Std.parseInt('0x' + hex.charAt(1)) * 17;
+			b = Std.parseInt('0x' + hex.charAt(2)) * 17;
+		} else {
+			throw "Invalid hex color format";
+		}
+		
+		return [r, g, b];
 	}
 
 	inline function open() {
