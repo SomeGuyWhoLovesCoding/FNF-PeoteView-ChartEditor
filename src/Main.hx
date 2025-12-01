@@ -101,7 +101,7 @@ class Main extends Application
 	private function createDisplays() {
 		var stamp = haxe.Timer.stamp();
 		Sys.println("Creating displays...");
-		uiOverlayDisplay = new CustomDisplay(0, 0, window.width, window.height, 0x111111FF);
+		uiOverlayDisplay = new CustomDisplay(0, 0, window.width, window.height, /*0x111111FF*/0x00000000);
 		Sys.println('Done! Took ${(haxe.Timer.stamp() - stamp) * 1000}ms');
 	}
 

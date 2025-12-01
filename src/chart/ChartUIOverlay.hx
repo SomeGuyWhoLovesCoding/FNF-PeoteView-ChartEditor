@@ -17,13 +17,39 @@ class ChartUIOverlay {
 		if (uiBuf == null) {
 			uiBuf = new Buffer<ChartUISprite>(64);
 			uiProg = new Program(uiBuf);
-			uiProg.blendEnabled = true;
-			uiProg.blendSrc = uiProg.blendSrcAlpha = BlendFactor.ONE;
-			uiProg.blendDst = uiProg.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
-
 			var tex = TextureSystem.getTexture("chartUITex");
 			ChartUISprite.init(uiProg, "chartUITex", tex);
 		}
+	}
+
+	function convertToSixColors(col:Array<Int>) {
+		var arr:Array<Int> = [for (i in 0...6) 0];
+		switch (col.length) {
+			case 1:
+				for (i in 0...6) arr[i] = col[0];
+			case 2:
+				for (i in 0...6) arr[i] = col[Std.int(i/3)];
+			case 3:
+				for (i in 0...6) arr[i] = col[Std.int(i/4)];
+			case 4:
+				for (i in 0...6) {
+					var iCustom = 0;
+					switch (i) {
+						case 0 | 1:
+							iCustom = 0;
+						case 2:
+							iCustom = 2;
+						case 3:
+							iCustom = 3;
+						case 4 | 5:
+							iCustom = 4;
+					}
+					arr[i] = col[iCustom];
+				}
+			default:
+				arr = col;
+		}
+		return arr;
 	}
 
 	inline function open() {
@@ -43,21 +69,31 @@ class ChartUIOverlay {
 	}
 
 	static var background(default, null):ChartUISprite;
-	//var 
+	static var icons(default, null):Array<ChartUISprite> = [];
 
 	function new() {
 		if (background == null) {
 			background = new ChartUISprite();
 			background.c = 0xFFFFFFFF;
-			background.changeID(1);
-			background.gradientMode = 1;
-			background.setAllColors([0xFF000000,0xFF000000,0xFF000000,0x0000FF00,0x0000FF00,0x0000FF00]);
+			background.changeID(0);
 			if (uiBuf != null)
 				uiBuf.addElement(background);
-
-			var peoteView = Main.current.peoteView;
-			resize(peoteView.width, peoteView.height);
 		}
+
+		var colors = [0xFF000000,0x0000FF00]; // placeholder color array
+
+		for (i in 0...36) {
+			var icon = icons[i] = new ChartUISprite();
+			icon.gradientMode = 1;
+			var cols = convertToSixColors(colors);
+			icon.setAllColors(cols);
+			icon.changeID(1);
+			if (uiBuf != null)
+				uiBuf.addElement(icon);
+		}
+
+		var peoteView = Main.current.peoteView;
+		resize(peoteView.width, peoteView.height);
 	}
 
 	var scrollX(default, null):Float;
@@ -79,6 +115,14 @@ class ChartUIOverlay {
 				background.stretch_w(peoteView.width);
 				uiBuf.updateElement(background);
 			}
+			if (icons != null) {
+				for (i in 0...icons.length) {
+					var icon = icons[i];
+					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
+					icon.y = 20;
+					uiBuf.updateElement(icon);
+				}
+			}
 		}
 	}
 
@@ -87,6 +131,14 @@ class ChartUIOverlay {
 			if (background != null) {
 				background.stretch_w(w);
 				uiBuf.updateElement(background);
+			}
+			if (icons != null) {
+				for (i in 0...icons.length) {
+					var icon = icons[i];
+					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
+					icon.y = 20;
+					uiBuf.updateElement(icon);
+				}
 			}
 		}
 	}
