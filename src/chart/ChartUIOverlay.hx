@@ -87,20 +87,11 @@ class ChartUIOverlay {
 			var icon = icons[i] = new ChartUISprite();
 			icon.gradientMode = 1;
 			var cols = convertToSixColors(colors);
-			icon.changeID(1);
+			icon.changeID(i % 2 == 0 ? 1 : 2);
 			icon.setAllColors(cols);
 			if (uiBuf != null)
 				uiBuf.addElement(icon);
 		}
-
-		/*if (background2 == null) {
-			background2 = new ChartUISprite();
-			background2.c = 0xFFFFFFFF;
-			background2.y = 40;
-			background2.changeID(0);
-			if (uiBuf != null)
-				uiBuf.addElement(background2);
-		}*/
 
 		var peoteView = Main.current.peoteView;
 		resize(peoteView.width, peoteView.height);
@@ -133,7 +124,7 @@ class ChartUIOverlay {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
 					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
-					icon.y = 20;
+					icon.y = 2;
 					uiBuf.updateElement(icon);
 				}
 			}
@@ -150,7 +141,7 @@ class ChartUIOverlay {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
 					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
-					icon.y = 20;
+					icon.y = 2;
 					uiBuf.updateElement(icon);
 				}
 			}
