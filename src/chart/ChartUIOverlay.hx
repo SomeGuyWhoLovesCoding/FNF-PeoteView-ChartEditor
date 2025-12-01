@@ -160,27 +160,27 @@ class ChartUIOverlay {
 		var activetabingrp = underlyingData.activetabchild;
 		//if (activetabingrp > linksInTab) activetabingrp = linksInTab;
 		var tabsInGrpCur = tabCur?.links[activetabingrp];
-		var isCtrl = keyMod == KeyModifier.LEFT_CTRL || keyMod == KeyModifier.LRIGHT_CTRL;
-		Sys.println(keyMod);
 
 		switch (keyCode) {
 			case KeyCode.LEFT:
-				if (isCtrl) {
-					Sys.println('ya1');
-					underlyingData.activetabparent--;
-				} else {
-					scrollX--;
-					if (scrollX < 0) scrollX = 0;
+				switch (keyMod) {
+					case KeyModifier.LEFT_CTRL | KeyModifier.RIGHT_CTRL:
+						Sys.println('ya1');
+						underlyingData.activetabparent--;
+					default:
+						scrollX--;
+						if (scrollX < 0) scrollX = 0;
 				}
 			case KeyCode.RIGHT:
-				if (isCtrl) {
-					Sys.println('ya');
-					underlyingData.activetabparent++;
-				} else {
-					scrollX++;
-					var iconsLen = tabsLen - icons?.length;
-					if (iconsLen < 0) iconsLen = 0;
-					if (scrollX >= iconsLen) scrollX = iconsLen - 1;
+				switch (keyMod) {
+					case KeyModifier.LEFT_CTRL | KeyModifier.RIGHT_CTRL:
+						Sys.println('ya');
+						underlyingData.activetabparent++;
+					default:
+						scrollX++;
+						var iconsLen = tabsLen - icons?.length;
+						if (iconsLen < 0) iconsLen = 0;
+						if (scrollX >= iconsLen) scrollX = iconsLen - 1;
 				}
 			case KeyCode.DOWN:
 				currentMenu--;
