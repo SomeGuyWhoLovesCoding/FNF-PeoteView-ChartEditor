@@ -163,9 +163,25 @@ class ChartUIOverlay {
 
 		switch (keyCode) {
 			case KeyCode.LEFT:
-				underlyingData.activetabparent--;
+				switch (keyMod) {
+					case KeyModifier.CTRL:
+						Sys.println('ya1');
+						underlyingData.activetabparent--;
+					default:
+						scrollX--;
+						if (scrollX < 0) scrollX = 0;
+				}
 			case KeyCode.RIGHT:
-				underlyingData.activetabparent++;
+				switch (keyMod) {
+					case KeyModifier.CTRL:
+						Sys.println('ya');
+						underlyingData.activetabparent++;
+					default:
+						scrollX++;
+						var iconsLen = icons?.length;
+						if (iconsLen > tabsLen - 1) iconsLen = 0;
+						if (scrollX > tabsLen - iconsLen - 1) scrollX = tabsLen - iconsLen - 1;
+				}
 			case KeyCode.DOWN:
 				currentMenu--;
 				if ((currentMenu:Int) < 0) {
@@ -189,7 +205,7 @@ class ChartUIOverlay {
 			underlyingData.activetabparent = 0;
 		}
 
-		Sys.println(underlyingData.activetabparent);
+		//Sys.println(underlyingData.activetabparent);
 	}
 
 	function controlState_mouse(mouseX:Float, mouseY:Float, mouseButton:MouseButton) {
@@ -227,11 +243,13 @@ class ChartUIOverlay {
 	var scrollXLerp(default, null):Float;
 	function update(deltaTime:Float) {
 		if (!opened) return;
-		var ratio = Math.min(deltaTime * 0.015, 1.0);
-		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
+		var ogRatio = deltaTime * 0.00000015;
+		var ratio = Math.min(ogRatio, 1.0);
+		Sys.println('Ratio:$ogRatio');
+		if (ratio == 1) ratio = (1000/lime.app.Application.current.window.frameRate) * 0.00000015;
 
 		scrollXLerp = Tools.lerp(scrollXLerp, scrollX, ratio);
-		//Sys.println(scrollXLerp);
+		Sys.println('$scrollXLerp,$scrollX,$deltaTime,$ratio');
 	}
 
 	function render(deltaTime:Float) {
@@ -293,10 +311,10 @@ class ChartUIOverlay {
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
-					var tab = tabs[i];
+					var tab = tabs[i + Std.int(scrollXLerp)];
 					var isTabAGrp = tab?.links.length != 1;
 					if (tab != null) {
-						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
+						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4)) - (Std.int(scrollXLerp * 40.0) % 40);
 						icon.y = 2;
 						icon.changeID(isTabAGrp ? 2 : 1);
 						var hexToColor = Tools.hexesToOpaqueColor(tab.color);
