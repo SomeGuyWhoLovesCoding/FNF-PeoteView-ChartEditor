@@ -9,10 +9,24 @@ class ChartUISprite implements Element {
 	@posY var y:Float = 0.0;
 
 	// size in pixel
-	@sizeX @formula("(_flip != 0.0 ? -w : w)") var w:Float = 0.0;
+	@sizeX @formula("(_flip != 0.0 ? -w : w)") var w(default, set):Float = 0.0;
+	inline function set_w(value:Float) {
+		_width_repeat = value;
+		return w = value;
+	}
 	@sizeY var h:Float = 0.0;
 
-	@tile var tileId:Int = 0;
+	// extra tex attributes for clipping
+	@texX var clipX:Float = 0.0;
+	@texY var clipY:Float = 0.0;
+	@texW var clipWidth:Float = 200.0;
+	@texH var clipHeight:Float = 200.0;
+
+	// extra tex attributes to adjust texture within the clip
+	@texPosX  var clipPosX:Float = 0.0;
+	@texPosY  var clipPosY:Float = 0.0;
+	@texSizeX var clipSizeX:Float = 200.0;
+	@texSizeY var clipSizeY:Float = 200.0;
 
 	@color var c:Color = 0xFFFFFFFF;
 	@color var c1:Color = 0xFFFFFFFF;
@@ -48,6 +62,8 @@ class ChartUISprite implements Element {
 	@varying @custom private var _flip:Float = 0.0;
 	@varying @custom var gradientMode:Float = 0.0;
 
+	@varying @custom private var _width_repeat:Float = 0.0;
+
 	var flip(get, set):Bool;
 
 	inline function get_flip() {
@@ -67,18 +83,17 @@ class ChartUISprite implements Element {
 
 	static function init(program:Program, name:String, texture:Texture) {
 		// creates a texture-layer named "name"
-		texture.tilesX = 4;
 		program.setTexture(texture, name, true);
 		program.blendEnabled = true;
 		program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
 		program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
 
-		uniformRepeat = new UniformFloat("repeatHoriz", 1);
+		var texW = Util.toFloatString(texture.width);
 
 		program.injectIntoFragmentShader('
-			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6) {
+			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6, float _width_repeat) {
 				vec2 coord = vTexCoord;
-				coord.x *= repeatHoriz;
+				coord.x *= _width_repeat / $texW;
 
 				if (gradientMode == 0.0) {
 					return getTextureColor(textureID, coord);
@@ -102,29 +117,34 @@ class ChartUISprite implements Element {
 				// Lerp between current and next color
 				return getTextureColor(textureID, coord) * mix(colors[segment], colors[segment + 1], t);
 			}
-		', [uniformRepeat]);
+		');
 
-		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6) * (c * alphaColor)');
+		program.setColorFormula('gradientOf6(${name}_ID, gradientMode, c, c1, c2, c3, c4, c5, c6, _width_repeat) * (c * alphaColor)');
 	}
 
 	function new() {
-		w = 36;
-		h = 40;
 	}
 
     inline function changeID(id:Int) {
-		tileId = id;
+		var wValue:Float = 36.0;
+		var hValue:Float = id == 0 ? 40.0 : 36.0;
+		var xValue:Float = 0.0;
+		var yValue:Float = id == 0 ? 0.0 : 2.0;
+
+		xValue += id * wValue;
+
+		if ((w != wValue && clipWidth != wValue && clipSizeX != wValue) && (h != hValue && clipHeight != hValue && clipHeight != hValue)) {
+			w = clipWidth = clipSizeX = wValue;
+			h = clipHeight = clipSizeY = hValue;
+		}
+
+		clipX = xValue;
+		clipY = yValue;
 
 		curID = id;
     }
 
 	function stretch_w(wValue:Float) {
-		//w = wValue;
-		/*clipWidth = 36;
-		clipSizeX = 1 / (wValue / 36);*/
 		w = wValue;
-		//uniformRepeat.value = w / clipWidth;
-		//trace(uniformRepeat.value);
-		//trace(wValue, clipSizeX);
 	}
 }

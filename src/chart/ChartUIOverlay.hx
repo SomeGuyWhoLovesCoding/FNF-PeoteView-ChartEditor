@@ -49,7 +49,9 @@ class ChartUIOverlay {
 		if (background == null) {
 			background = new ChartUISprite();
 			background.c = 0xFFFFFFFF;
-			background.changeID(0);
+			background.changeID(1);
+			background.gradientMode = 1;
+			background.setAllColors([0xFF000000,0xFF000000,0xFF000000,0x0000FF00,0x0000FF00,0x0000FF00]);
 			if (uiBuf != null)
 				uiBuf.addElement(background);
 
