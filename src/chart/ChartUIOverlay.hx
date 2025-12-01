@@ -67,6 +67,7 @@ class ChartUIOverlay {
 		var arr:Array<Int> = [];
 		for (i in 0...col.length) {
 			var actualColor = Std.parseInt("0x" + col[i]);
+			Sys.println(actualColor);
 			var r = (actualColor >> 16) & 0xFF;
 			var g = (actualColor >> 8) & 0xFF;
 			var b = actualColor & 0xFF;
@@ -154,7 +155,7 @@ class ChartUIOverlay {
 						icon.changeID(tab.links.length != 1 ? 2 : 1);
 						var hexToColor = hexesToOpaqueColor(tab.color);
 						var cols = convertToSixColors(hexToColor);
-						if (i == 0) trace(cols);
+						if (i == 1) trace(cols);
 						icon.setAllColors(cols);
 					} else {
 						icon.x = -99999;
