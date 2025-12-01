@@ -66,13 +66,20 @@ class ChartUIOverlay {
 		if (col == null) return [for (i in 0...6) 0];
 		var arr:Array<Int> = [];
 		for (i in 0...col.length) {
-			var actualColor = Std.parseInt("0x" + col[i]);
-			Sys.println(actualColor);
-			var r = (actualColor >> 16) & 0xFF;
-			var g = (actualColor >> 8) & 0xFF;
-			var b = actualColor & 0xFF;
-			var argbColor = (0xFF << 24) | (r << 16) | (g << 8) | b;
-			arr.push(argbColor);
+			var str = col[i];
+			//for (i in 0...6) {
+				var char = str.charAt(i);
+				var hexDigits = Color.getHexDigit(str.charAt(0)) >>
+				Color.getHexDigit(str.charAt(1)) >>
+				Color.getHexDigit(str.charAt(2)) >>
+				Color.getHexDigit(str.charAt(3)) >>
+				Color.getHexDigit(str.charAt(4)) >>
+				Color.getHexDigit(str.charAt(5));
+				if (i > str.length) throw "NOOOOOOOO";
+			//}
+			var argbColor:Color = Color.WHITE;
+			argbColor.setRGB(hexDigits);
+			arr.push((argbColor:Int));
 		}
 		return arr;
 	}
