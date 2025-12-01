@@ -70,27 +70,37 @@ class ChartUIOverlay {
 
 	static var background(default, null):ChartUISprite;
 	static var icons(default, null):Array<ChartUISprite> = [];
+	static var background2(default, null):ChartUISprite;
 
 	function new() {
 		if (background == null) {
 			background = new ChartUISprite();
-			background.c = 0xFFFFFFFF;
 			background.changeID(0);
+			background.c = 0xFFFFFFFF;
 			if (uiBuf != null)
 				uiBuf.addElement(background);
 		}
 
-		var colors = [0xFF000000,0x0000FF00]; // placeholder color array
+		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // placeholder color array
 
 		for (i in 0...36) {
 			var icon = icons[i] = new ChartUISprite();
 			icon.gradientMode = 1;
 			var cols = convertToSixColors(colors);
-			icon.setAllColors(cols);
 			icon.changeID(1);
+			icon.setAllColors(cols);
 			if (uiBuf != null)
 				uiBuf.addElement(icon);
 		}
+
+		/*if (background2 == null) {
+			background2 = new ChartUISprite();
+			background2.c = 0xFFFFFFFF;
+			background2.y = 40;
+			background2.changeID(0);
+			if (uiBuf != null)
+				uiBuf.addElement(background2);
+		}*/
 
 		var peoteView = Main.current.peoteView;
 		resize(peoteView.width, peoteView.height);
@@ -115,6 +125,10 @@ class ChartUIOverlay {
 				background.stretch_w(peoteView.width);
 				uiBuf.updateElement(background);
 			}
+			/*if (background2 != null) {
+				background2.stretch_w(peoteView.width);
+				uiBuf.updateElement(background);
+			}*/
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
