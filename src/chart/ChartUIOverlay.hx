@@ -1,5 +1,8 @@
 package chart;
 
+import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
+
 /**
  * This class handles all of the visual elements and stuff, all combined into one spritesheet which is onlt 144x40.
 **/
@@ -19,7 +22,7 @@ class ChartUIOverlay {
 		display = disp;
 
 		if (uiBuf == null) {
-			uiBuf = new Buffer<ChartUISprite>(64);
+			uiBuf = new Buffer<ChartUISprite>(75);
 			uiProg = new Program(uiBuf);
 			var tex = TextureSystem.getTexture("chartUITex");
 			ChartUISprite.init(uiProg, "chartUITex", tex);
@@ -29,56 +32,15 @@ class ChartUIOverlay {
 		trace(underlyingData);
 	}
 
-	function convertToSixColors(col:Array<Int>) {
-		if (col == null) return [for (i in 0...6) 0];
-		var arr:Array<Int> = [for (i in 0...6) 0];
-		switch (col.length) {
-			case 1:
-				for (i in 0...6) arr[i] = col[0];
-			case 2:
-				for (i in 0...6) arr[i] = col[Std.int(i/3)];
-			case 3:
-				for (i in 0...6) arr[i] = col[Std.int(i/4)];
-			case 4:
-				for (i in 0...6) {
-					var iCustom = 0;
-					switch (i) {
-						case 0 | 1:
-							iCustom = 0;
-						case 2:
-							iCustom = 2;
-						case 3:
-							iCustom = 3;
-						case 4 | 5:
-							iCustom = 4;
-					}
-					arr[i] = col[iCustom];
-				}
-			default:
-				arr = col;
-		}
-		return arr;
-	}
-
-	// WIP!
-	// Right now this results in incorrect colors so please be patient while this is fixed!
-	function hexesToOpaqueColor(col:Array<String>) {
-		if (col == null) return [for (i in 0...6) 0];
-		var arr:Array<Int> = [];
-		for (i in 0...col.length) {
-			var str = col[i];
-			var argbColor:Color = Std.parseInt('0x${str}ff');
-			arr.push((argbColor:Int));
-		}
-		return arr;
-	}
-
 	inline function open() {
 		active = opened = true;
 
 		if (!uiProg.isIn(display)) {
 			display.addProgram(uiProg);
 		}
+
+		var window = lime.app.Application.current.window;
+		window.onKeyDown.add(controlState);
 	}
 
 	inline function close() {
@@ -87,27 +49,60 @@ class ChartUIOverlay {
 		if (uiProg.isIn(display)) {
 			display.removeProgram(uiProg);
 		}
+
+		var window = lime.app.Application.current.window;
+		window.onKeyDown.remove(controlState);
 	}
 
 	static var background(default, null):ChartUISprite;
 	static var icons(default, null):Array<ChartUISprite> = [];
 	static var leftButton(default, null):ChartUISprite;
 
+	// subtab/tab group implementation
+	static var tabGrpBackground(default, null):ChartUISprite;
+	static var tabGrpIcons(default, null):Array<ChartUISprite> = [];
+	var tabGrpY(default, null):Float;
+
 	function new() {
+		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // was a placeholder color array, now is being used for nothing cuz they'll all be rendered out as the current visual representation of tabs.json
+
 		if (background == null) {
 			background = new ChartUISprite();
 			background.changeID(0);
 			background.c = 0xFFFFFFFF;
+		}
+
+		// This goes first due to ordering
+		tabGrpY = background?.clipHeight;
+		if (tabGrpBackground == null) {
+			tabGrpBackground = new ChartUISprite();
+			tabGrpBackground.changeID(0);
+			tabGrpBackground.c = 0xFFFFFFFF;
+			tabGrpBackground.y = tabGrpY;
+			if (uiBuf != null)
+				uiBuf.addElement(tabGrpBackground);
+		}
+
+		for (i in 0...36) {
+			var icon = tabGrpIcons[i] = new ChartUISprite();
+			icon.y = tabGrpY;
+			icon.gradientMode = 1;
+			var cols = Tools.convertToSixColors(colors);
+			icon.changeID(i % 2 == 0 ? 1 : 2);
+			icon.setAllColors(cols);
+			if (uiBuf != null)
+				uiBuf.addElement(icon);
+		}
+
+		if (background != null) {
 			if (uiBuf != null)
 				uiBuf.addElement(background);
 		}
 
-		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // was a placeholder color array, now is being used for nothing cuz they'll all be rendered out as the current visual representation of tabs.json
-
 		for (i in 0...36) {
 			var icon = icons[i] = new ChartUISprite();
 			icon.gradientMode = 1;
-			var cols = convertToSixColors(colors);
+			var cols = Tools.convertToSixColors(colors);
 			icon.changeID(i % 2 == 0 ? 1 : 2);
 			icon.setAllColors(cols);
 			if (uiBuf != null)
@@ -124,6 +119,35 @@ class ChartUIOverlay {
 
 		var peoteView = Main.current.peoteView;
 		resize(peoteView.width, peoteView.height);
+	}
+
+	// This is where everything is controlled at.
+	function controlState(keyCode:KeyCode, keyMod:KeyModifier) {
+		var tabs = underlyingData.tabs.length;
+		var activetab = underlyingData.activetabparent;
+		var tabCur = underlyingData.tabs[activetab];
+		var linksInTab = tabCur?.links.length;
+		var activetabingrp = underlyingData.activetabchild;
+		//if (activetabingrp > linksInTab) activetabingrp = linksInTab;
+		var tabsInGrpCur = tabCur?.links[activetabingrp];
+
+		switch (keyCode) {
+			case KeyCode.LEFT:
+				underlyingData.activetabparent--;
+			case KeyCode.RIGHT:
+				underlyingData.activetabparent++;
+			default:
+		}
+
+		if (underlyingData.activetabparent < 0) {
+			underlyingData.activetabparent = tabs - 1;
+		}
+
+		if (underlyingData.activetabparent >= tabs) {
+			underlyingData.activetabparent = 0;
+		}
+
+		Sys.println(underlyingData.activetabparent);
 	}
 
 	var scrollX(default, null):Float;
@@ -144,8 +168,18 @@ class ChartUIOverlay {
 		}
 	}
 
+	var tabGrpSectionY(default, null):Float;
+	var tabGrpSectionYLerp(default, null):Float;
 	function updateMainParts(deltaTime:Float) {
+		var ratio = Math.min(deltaTime * 0.015, 1.0);
+		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
+
+		tabGrpSectionYLerp = Tools.lerp(tabGrpSectionYLerp, tabGrpSectionY, ratio);
+
 		var peoteView = Main.current.peoteView;
+		var tab = underlyingData.tabs[underlyingData.activetabparent];
+		var isTabGrp = tab?.links.length != 1;
+		Sys.println(isTabGrp);
 		if (background != null) {
 			background.stretch_w(peoteView.width);
 			uiBuf.updateElement(background);
@@ -153,22 +187,49 @@ class ChartUIOverlay {
 				leftButton.x = leftButton.y = 2;
 				uiBuf.updateElement(leftButton);
 			}
+			if (tabGrpBackground != null) {
+				tabGrpBackground.stretch_w(peoteView.width);
+				tabGrpSectionY = !isTabGrp ? 0 : tabGrpY;
+				tabGrpBackground.y = tabGrpSectionYLerp;
+				uiBuf.updateElement(tabGrpBackground);
+			}
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
 					var tab = underlyingData.tabs[i];
+					var isTabAGrp = tab?.links.length != 1;
 					if (tab != null) {
 						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
 						icon.y = 2;
-						icon.changeID(tab.links.length != 1 ? 2 : 1);
-						var hexToColor = hexesToOpaqueColor(tab.color);
-						var cols = convertToSixColors(hexToColor);
+						icon.changeID(isTabAGrp ? 2 : 1);
+						var hexToColor = Tools.hexesToOpaqueColor(tab.color);
+						var cols = Tools.convertToSixColors(hexToColor);
 						icon.setAllColors(cols);
 					} else {
 						icon.x = -99999;
 						icon.y = -99999;
 					}
 					uiBuf.updateElement(icon);
+					if (tabGrpBackground != null && tabGrpIcons != null) {
+						for (i in 0...tabGrpIcons.length) {
+							var icon = tabGrpIcons[i];
+							if (tab != null) {
+								var tabLink = tab.links[i];
+								if (tabLink != null && isTabGrp) {
+									icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
+									icon.y = tabGrpBackground.y;
+									icon.changeID(1); // tabLink.path
+									var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
+									var cols = Tools.convertToSixColors(hexToColor);
+									icon.setAllColors(cols);
+								} else {
+									icon.x = -99999;
+									icon.y = -99999;
+								}
+								uiBuf.updateElement(icon);
+							}
+						}
+					}
 				}
 			}
 		}
