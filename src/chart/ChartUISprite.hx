@@ -11,7 +11,7 @@ class ChartUISprite implements Element {
 	// size in pixel
 	@sizeX @formula("(_flip != 0.0 ? -w : w)") var w(default, set):Float = 0.0;
 	inline function set_w(value:Float) {
-		_width_repeat = value;
+		_width_repeat = value / 36.0; // This is for horizontal repeat to work btw
 		return w = value;
 	}
 	@sizeY var h:Float = 0.0;
@@ -88,12 +88,12 @@ class ChartUISprite implements Element {
 		program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
 		program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
 
-		var texW = Util.toFloatString(texture.width);
+		//var texW = "36.0";
 
 		program.injectIntoFragmentShader('
 			vec4 gradientOf6(int textureID, float gradientMode, vec4 c, vec4 c1, vec4 c2, vec4 c3, vec4 c4, vec4 c5, vec4 c6, float _width_repeat) {
 				vec2 coord = vTexCoord;
-				coord.x *= _width_repeat / $texW;
+				coord.x *= _width_repeat;
 
 				if (gradientMode == 0.0) {
 					return getTextureColor(textureID, coord);
