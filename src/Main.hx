@@ -140,7 +140,7 @@ class Main extends Application
 			#end
 
 			if (chartUIOverlay != null && chartUIOverlay.active) {
-				chartUIOverlay.update(deltaTime);
+				chartUIOverlay.update(newDeltaTime);
 			}
 		}
 	}

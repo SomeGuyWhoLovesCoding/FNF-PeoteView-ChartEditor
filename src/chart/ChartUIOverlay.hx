@@ -178,8 +178,8 @@ class ChartUIOverlay {
 						underlyingData.activetabparent++;
 					default:
 						scrollX++;
-						var iconsLen = icons?.length;
-						if (iconsLen > tabsLen - 1) iconsLen = 0;
+						var iconsLen = icons?.length - 36;
+						if (iconsLen < 0) iconsLen = 0;
 						if (scrollX > tabsLen - iconsLen - 1) scrollX = tabsLen - iconsLen - 1;
 				}
 			case KeyCode.DOWN:
@@ -243,13 +243,10 @@ class ChartUIOverlay {
 	var scrollXLerp(default, null):Float;
 	function update(deltaTime:Float) {
 		if (!opened) return;
-		var ogRatio = deltaTime * 0.00000015;
-		var ratio = Math.min(ogRatio, 1.0);
-		Sys.println('Ratio:$ogRatio');
-		if (ratio == 1) ratio = (1000/lime.app.Application.current.window.frameRate) * 0.00000015;
+		var ratio = Math.min(deltaTime * 0.015, 1.0);
+		if (ratio == 1) ratio = (1/lime.app.Application.current.window.frameRate) * 0.015;
 
 		scrollXLerp = Tools.lerp(scrollXLerp, scrollX, ratio);
-		Sys.println('$scrollXLerp,$scrollX,$deltaTime,$ratio');
 	}
 
 	function render(deltaTime:Float) {
