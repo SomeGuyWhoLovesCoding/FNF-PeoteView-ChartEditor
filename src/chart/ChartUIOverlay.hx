@@ -2,6 +2,17 @@ package chart;
 
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
+import lime.ui.MouseButton;
+
+/**
+ * This enum represents the chart UI state.
+**/
+enum abstract ChartUIMenu(Int) from Int to Int {
+	var CURRENT_TABS = 0;
+	var RECENTLY_CLOSED_TABS = 1;
+	var AUTOSAVED_TABS = 2;
+	var MENUS_TOTAL = 3;
+}
 
 /**
  * This class handles all of the visual elements and stuff, all combined into one spritesheet which is onlt 144x40.
@@ -29,7 +40,7 @@ class ChartUIOverlay {
 		}
 
 		underlyingData = haxe.Json.parse(sys.io.File.getContent("manifest/tabs.json"));
-		trace(underlyingData);
+		//trace(underlyingData);
 	}
 
 	inline function open() {
@@ -41,6 +52,7 @@ class ChartUIOverlay {
 
 		var window = lime.app.Application.current.window;
 		window.onKeyDown.add(controlState);
+		window.onMouseDown.add(controlState_mouse);
 	}
 
 	inline function close() {
@@ -52,6 +64,7 @@ class ChartUIOverlay {
 
 		var window = lime.app.Application.current.window;
 		window.onKeyDown.remove(controlState);
+		window.onMouseDown.remove(controlState_mouse);
 	}
 
 	static var background(default, null):ChartUISprite;
@@ -62,6 +75,8 @@ class ChartUIOverlay {
 	static var tabGrpBackground(default, null):ChartUISprite;
 	static var tabGrpIcons(default, null):Array<ChartUISprite> = [];
 	var tabGrpY(default, null):Float;
+
+	var currentMenu(default, null):ChartUIMenu = CURRENT_TABS;
 
 	function new() {
 		var colors = [0xFF0000FF,0x0000FFFF]/*[0xFF0000FF]*/; // was a placeholder color array, now is being used for nothing cuz they'll all be rendered out as the current visual representation of tabs.json
@@ -123,9 +138,22 @@ class ChartUIOverlay {
 
 	// This is where everything is controlled at.
 	function controlState(keyCode:KeyCode, keyMod:KeyModifier) {
-		var tabs = underlyingData.tabs.length;
+		var tabs:Array<ChartUIData.ChartTab> = null;
+
+		switch (currentMenu) {
+			case ChartUIMenu.CURRENT_TABS:
+				tabs = underlyingData.tabs;
+			case ChartUIMenu.RECENTLY_CLOSED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+			case ChartUIMenu.AUTOSAVED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+			default:
+				tabs = underlyingData.tabs;
+		}
+
+		var tabsLen = tabs.length;
 		var activetab = underlyingData.activetabparent;
-		var tabCur = underlyingData.tabs[activetab];
+		var tabCur = tabs[activetab];
 		var linksInTab = tabCur?.links.length;
 		var activetabingrp = underlyingData.activetabchild;
 		//if (activetabingrp > linksInTab) activetabingrp = linksInTab;
@@ -140,14 +168,42 @@ class ChartUIOverlay {
 		}
 
 		if (underlyingData.activetabparent < 0) {
-			underlyingData.activetabparent = tabs - 1;
+			underlyingData.activetabparent = tabsLen - 1;
 		}
 
-		if (underlyingData.activetabparent >= tabs) {
+		if (underlyingData.activetabparent >= tabsLen) {
 			underlyingData.activetabparent = 0;
 		}
 
 		Sys.println(underlyingData.activetabparent);
+	}
+
+	function controlState_mouse(mouseX:Float, mouseY:Float, mouseButton:MouseButton) {
+		var tabs:Array<ChartUIData.ChartTab> = null;
+		var tabbarcolor:String = "FFFFFF";
+
+		switch (currentMenu) {
+			case ChartUIMenu.CURRENT_TABS:
+				tabs = underlyingData.tabs;
+				tabbarcolor = underlyingData.color;
+			case ChartUIMenu.RECENTLY_CLOSED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+				tabbarcolor = "166E89";
+			case ChartUIMenu.AUTOSAVED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+				tabbarcolor = "CCC816"; // was going to be 898716
+			default:
+				tabs = underlyingData.tabs;
+				tabbarcolor = underlyingData.color;
+		}
+		
+		var tabsLen = tabs.length;
+		var activetab = underlyingData.activetabparent;
+		var tabCur = tabs[activetab];
+		var linksInTab = tabCur?.links.length;
+		var activetabingrp = underlyingData.activetabchild;
+		//if (activetabingrp > linksInTab) activetabingrp = linksInTab;
+		var tabsInGrpCur = tabCur?.links[activetabingrp];
 	}
 
 	var scrollX(default, null):Float;
@@ -176,27 +232,49 @@ class ChartUIOverlay {
 
 		tabGrpSectionYLerp = Tools.lerp(tabGrpSectionYLerp, tabGrpSectionY, ratio);
 
+		var tabs:Array<ChartUIData.ChartTab> = null;
+		var tabbarcolor:String = "FFFFFF";
+
+		switch (currentMenu) {
+			case ChartUIMenu.CURRENT_TABS:
+				tabs = underlyingData.tabs;
+				tabbarcolor = underlyingData.color;
+			case ChartUIMenu.RECENTLY_CLOSED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+				tabbarcolor = "166E89";
+			case ChartUIMenu.AUTOSAVED_TABS:
+				tabs = underlyingData.recentlyclosedtabs;
+				tabbarcolor = "CCC816"; // was going to be 898716
+			default:
+				tabs = underlyingData.tabs;
+				tabbarcolor = underlyingData.color;
+		}
+
 		var peoteView = Main.current.peoteView;
-		var tab = underlyingData.tabs[underlyingData.activetabparent];
+		var tab = tabs[underlyingData.activetabparent];
 		var isTabGrp = tab?.links.length != 1;
-		Sys.println(isTabGrp);
+		var tabGrp = tab?.links[underlyingData.activetabchild];
 		if (background != null) {
 			background.stretch_w(peoteView.width);
+			background.c = Tools.hexesToOpaqueColor([tabbarcolor])[0];
 			uiBuf.updateElement(background);
 			if (leftButton != null) {
 				leftButton.x = leftButton.y = 2;
+				leftButton.c = background.c;
 				uiBuf.updateElement(leftButton);
 			}
 			if (tabGrpBackground != null) {
 				tabGrpBackground.stretch_w(peoteView.width);
 				tabGrpSectionY = !isTabGrp ? 0 : tabGrpY;
 				tabGrpBackground.y = tabGrpSectionYLerp;
+				tabGrpBackground.c = Tools.hexesToOpaqueColor(tabGrp.color)[0];
+				background.c = Tools.hexesToOpaqueColor([tabbarcolor])[0];
 				uiBuf.updateElement(tabGrpBackground);
 			}
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
-					var tab = underlyingData.tabs[i];
+					var tab = tabs[i];
 					var isTabAGrp = tab?.links.length != 1;
 					if (tab != null) {
 						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
@@ -216,8 +294,8 @@ class ChartUIOverlay {
 							if (tab != null) {
 								var tabLink = tab.links[i];
 								if (tabLink != null && isTabGrp) {
-									icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
-									icon.y = tabGrpBackground.y;
+									icon.x = (leftButton.x + 4) + (i * (icon.w + 4));
+									icon.y = tabGrpBackground.y + 2;
 									icon.changeID(1); // tabLink.path
 									var hexToColor = Tools.hexesToOpaqueColor(tabLink.color);
 									var cols = Tools.convertToSixColors(hexToColor);

@@ -10,6 +10,8 @@ typedef ChartUIData = {
 	var activetabchild:Int;
 	var color:String;
 	var tabs:Array<ChartTab>;
+	@:optional var recentlyclosedtabs:Array<ChartTab>;
+	@:optional var autosavedtabs:Array<ChartTab>;
 }
 
 @:publicFields
