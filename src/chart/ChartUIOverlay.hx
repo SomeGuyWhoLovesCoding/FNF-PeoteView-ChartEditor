@@ -67,46 +67,10 @@ class ChartUIOverlay {
 		var arr:Array<Int> = [];
 		for (i in 0...col.length) {
 			var str = col[i];
-			var hexStr = hexToRGB(str);
-			var argbColor:Color = Color.WHITE;
-			argbColor.r = hexStr[0];
-			argbColor.g = hexStr[1];
-			argbColor.b = hexStr[2];
+			var argbColor:Color = Std.parseInt('0x${str}ff');
 			arr.push((argbColor:Int));
 		}
 		return arr;
-	}
-
-	// This was generated with claude.ai for the lols
-	private var __globalColor_Cache(default, null):Array<Int> = [0, 0, 0]; // prevent any memory leaks (this part was me btw)
-	function hexToRGB(hex:String):Array<Int> {
-		// Remove '#' if present
-		if (hex.charAt(0) == '#') {
-			hex = hex.substr(1);
-		}
-		
-		if (hex.length == 8) {
-			// Format: AARRGGBB (skip alpha)
-			var argb = Std.parseInt('0x' + hex);
-			__globalColor_Cache[0] = (argb >> 16) & 0xFF;
-			__globalColor_Cache[1] = (argb >> 8) & 0xFF;
-			__globalColor_Cache[2] = argb & 0xFF;
-		} else if (hex.length == 6) {
-			// Format: RRGGBB
-			var rgb = Std.parseInt('0x' + hex);
-			__globalColor_Cache[0] = (rgb >> 16) & 0xFF;
-			__globalColor_Cache[1] = (rgb >> 8) & 0xFF;
-			__globalColor_Cache[2] = rgb & 0xFF;
-		} else if (hex.length == 3) {
-			// Format: RGB (shorthand)
-			__globalColor_Cache[0] = Std.parseInt('0x' + hex.charAt(0)) * 17;
-			__globalColor_Cache[1] = Std.parseInt('0x' + hex.charAt(1)) * 17;
-			__globalColor_Cache[2] = Std.parseInt('0x' + hex.charAt(2)) * 17;
-		} else {
-			throw "Invalid hex color format";
-		}
-		
-		return __globalColor_Cache;
 	}
 
 	inline function open() {
@@ -127,7 +91,7 @@ class ChartUIOverlay {
 
 	static var background(default, null):ChartUISprite;
 	static var icons(default, null):Array<ChartUISprite> = [];
-	static var background2(default, null):ChartUISprite;
+	static var leftButton(default, null):ChartUISprite;
 
 	function new() {
 		if (background == null) {
@@ -150,6 +114,14 @@ class ChartUIOverlay {
 				uiBuf.addElement(icon);
 		}
 
+		if (leftButton == null) {
+			leftButton = new ChartUISprite();
+			leftButton.changeID(3);
+			leftButton.c = 0xFFFFFFFF;
+			if (uiBuf != null)
+				uiBuf.addElement(leftButton);
+		}
+
 		var peoteView = Main.current.peoteView;
 		resize(peoteView.width, peoteView.height);
 	}
@@ -167,27 +139,30 @@ class ChartUIOverlay {
 
 	function render(deltaTime:Float) {
 		if (!opened) return;
-		var peoteView = Main.current.peoteView;
 		if (uiBuf != null) {
-			if (background != null) {
-				background.stretch_w(peoteView.width);
-				uiBuf.updateElement(background);
+			updateMainParts(deltaTime);
+		}
+	}
+
+	function updateMainParts(deltaTime:Float) {
+		var peoteView = Main.current.peoteView;
+		if (background != null) {
+			background.stretch_w(peoteView.width);
+			uiBuf.updateElement(background);
+			if (leftButton != null) {
+				leftButton.x = leftButton.y = 2;
+				uiBuf.updateElement(leftButton);
 			}
-			/*if (background2 != null) {
-				background2.stretch_w(peoteView.width);
-				uiBuf.updateElement(background);
-			}*/
 			if (icons != null) {
 				for (i in 0...icons.length) {
 					var icon = icons[i];
 					var tab = underlyingData.tabs[i];
 					if (tab != null) {
-						icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
+						icon.x = (leftButton.clipWidth + leftButton.x + 8) + (i * (icon.w + 4));
 						icon.y = 2;
 						icon.changeID(tab.links.length != 1 ? 2 : 1);
 						var hexToColor = hexesToOpaqueColor(tab.color);
 						var cols = convertToSixColors(hexToColor);
-						//if (i == 1) trace(cols);
 						icon.setAllColors(cols);
 					} else {
 						icon.x = -99999;
@@ -200,20 +175,7 @@ class ChartUIOverlay {
 	}
 
 	function resize(w:Int, h:Int) {
-		if (uiBuf != null) {
-			if (background != null) {
-				background.stretch_w(w);
-				uiBuf.updateElement(background);
-			}
-			if (icons != null) {
-				for (i in 0...icons.length) {
-					var icon = icons[i];
-					icon.x = background.clipWidth + 4 + (i * (icon.w + 4));
-					icon.y = 2;
-					uiBuf.updateElement(icon);
-				}
-			}
-		}
+		updateMainParts(0);
 	}
 
 	static function save() {
