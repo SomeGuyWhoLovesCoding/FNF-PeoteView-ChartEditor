@@ -141,7 +141,7 @@ class ChartUISprite implements Element {
 		var wValue:Float = 36.0;
 		var hValue:Float = id == 0 ? 40.0 : 36.0;
 		var xValue:Float = 0.0;
-		var yValue:Float = id == 0 ? 0.0 : 2.0;
+		var yValue:Float = (id == 0 ? 0.0 : 2.0) + 131;
 
 		xValue += id * wValue;
 

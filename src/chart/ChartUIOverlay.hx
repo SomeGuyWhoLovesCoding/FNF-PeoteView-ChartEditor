@@ -30,6 +30,8 @@ class ChartUIOverlay {
 	static var display(default, null):CustomDisplay;
 	static var underlyingData(default, null):ChartUIData;
 
+	static var text(default, null):Text;
+
 	var active:Bool = false;
 
 	var opened(default, null):Bool;
@@ -42,6 +44,18 @@ class ChartUIOverlay {
 			uiProg = new Program(uiBuf);
 			var tex = TextureSystem.getTexture("chartUITex");
 			ChartUISprite.init(uiProg, "chartUITex", tex);
+		}
+
+		if (text == null) {
+			var elementOffset = 0;
+			elementOffset++; // background
+			elementOffset += NUM_ICON_ELEMENTS;
+			elementOffset++; // visual indicator (regular)
+			elementOffset++; // tab group background
+			elementOffset += NUM_ICON_ELEMENTS;
+			elementOffset++; // visual indicator (tab group)
+			text = new Text("", 0, 0, display, "Sample text", "arial", false, uiBuf, elementOffset);
+
 		}
 
 		underlyingData = haxe.Json.parse(sys.io.File.getContent("manifest/tabs.json"));
