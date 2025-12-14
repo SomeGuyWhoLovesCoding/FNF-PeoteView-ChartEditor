@@ -30,6 +30,8 @@ class Text {
 				if (elem != null) {
 					elem.x = elem.y = -999999999;
 				}
+
+				buffer.updateElement(elem); // don't remove this or a bug will appear
 			}
 		}
 
@@ -247,10 +249,11 @@ class Text {
 			program.setColorFormula('getTextureColor(font_ID, vTexCoord) * (c * alphaColor)');
 		}
 
+		this.font = font;
+
 		if (!program.isIn(display)) {
 			display.addProgram(program);
 		}
-		this.font = font;
 
 		//trace("Fuck all of this");
 		//Sys.println(buffer != null);
