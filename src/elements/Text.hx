@@ -14,9 +14,10 @@ class Text {
 
 	var display:Display;
 
-	var text(default, set):String;
+	var text(default, set):String = "";
 
 	function set_text(str:String) {
+		//if (text.length == 0) text = "_";
 		if (str == text) {
 			return text;
 		}
