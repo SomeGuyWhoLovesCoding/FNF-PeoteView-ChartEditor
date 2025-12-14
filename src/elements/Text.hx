@@ -282,7 +282,7 @@ class Text {
 					
 					vec4 current = getTextureColor(textureID, coord);
 					
-					//if (current.a < 0.99) { don't do this if condition. Makes outlines look like shit
+					if (current.a < 0.99) {
 						float offset = os;
 						float maxAlpha = 0.0;
 						
@@ -303,7 +303,7 @@ class Text {
 							vec4 outline = vec4(oc.rgb, oc.a * outlineStrength);
 							current = mix(outline, current, current.a);
 						}
-					//}
+					}
 					
 					return current;
 				}
