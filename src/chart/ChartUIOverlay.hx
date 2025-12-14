@@ -48,6 +48,7 @@ class ChartUIOverlay {
 
 		if (text == null) {
 			text = new Text("wow", 200, 200, display, "Hi", "arial");
+			text.alpha = 0;
 		}
 
 		underlyingData = haxe.Json.parse(sys.io.File.getContent("manifest/tabs.json"));
@@ -65,6 +66,9 @@ class ChartUIOverlay {
 		var window = lime.app.Application.current.window;
 		window.onKeyDown.add(controlState);
 		window.onMouseDown.add(controlState_mouse);
+
+		if (text != null)
+			text.alpha = 1;
 	}
 
 	function close() {
@@ -78,6 +82,9 @@ class ChartUIOverlay {
 		var window = lime.app.Application.current.window;
 		window.onKeyDown.remove(controlState);
 		window.onMouseDown.remove(controlState_mouse);
+
+		if (text != null)
+			text.alpha = 0;
 	}
 
 	static var background(default, null):ChartUISprite;

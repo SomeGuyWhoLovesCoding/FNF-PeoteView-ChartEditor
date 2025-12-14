@@ -140,6 +140,7 @@ class Tools {
 	static function parseFont(name:String):Array<elements.text.TextCharData> {
 		var path = 'assets/fonts/$name/data.json';
 		var data = haxe.Json.parse(sys.io.File.getContent(path));
+		//trace("TEXT JSON DATA",data);
 		TextureSystem.createTexture(name + "Font", path.replace('data.json', data.atlas.imagePath), false, true);
 		return data.sprites;
 	}

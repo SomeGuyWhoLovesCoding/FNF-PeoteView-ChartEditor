@@ -65,9 +65,9 @@ class Text {
 			if (height < spr.h) {
 				height = spr.h;
 			}
-		}
 
-		buffer.update();
+			buffer.updateElement(spr);
+		}
 
 		width = advanceX;
 
@@ -84,9 +84,9 @@ class Text {
 		for (i in 0...text.length) {
 			var elem = buffer.getElement(i);
 			elem.x += value - x;
-		}
 
-		buffer.update();
+			buffer.updateElement(elem);
+		}
 
 		return x = value;
 	}
@@ -101,9 +101,9 @@ class Text {
 		for (i in 0...text.length) {
 			var elem = buffer.getElement(i);
 			elem.y += value - y;
-		}
 
-		buffer.update();
+			buffer.updateElement(elem);
+		}
 
 		return y = value;
 	}
@@ -144,9 +144,9 @@ class Text {
 			if (height < spr.h) {
 				height = spr.h;
 			}
-		}
 
-		buffer.update();
+			buffer.updateElement(spr);
+		}
 
 		width = advanceX;
 		_scale = scale;
@@ -168,9 +168,10 @@ class Text {
 			if (spr != null) {
 				spr.alpha = value;
 			}
+
+			buffer.updateElement(spr);
 		}
 
-		buffer.update();
 		return alpha = value;
 	}
 
@@ -182,9 +183,10 @@ class Text {
 			if (spr != null) {
 				spr.c = value;
 			}
+
+			buffer.updateElement(spr);
 		}
 
-		buffer.update();
 		return color = value;
 	}
 
@@ -196,9 +198,10 @@ class Text {
 			if (spr != null) {
 				spr.oc = value;
 			}
+
+			buffer.updateElement(spr);
 		}
 
-		buffer.update();
 		return outlineColor = value;
 	}
 
@@ -222,9 +225,9 @@ class Text {
 				spr.oc = outlineColor;
 				spr.os = outlineSize;
 			}
-		}
 
-		buffer.update();
+			buffer.updateElement(spr);
+		}
 	}
 
 	var parsedTextAtlasData:Array<TextCharData>;
@@ -232,7 +235,7 @@ class Text {
 	function new(key:String, x:Float, y:Float, display:Display, text:String = "Sample text", font:String = "vcr") {
 		_key = key;
 
-		trace("Okay, so new buffer is finally made now");
+		//trace("Okay, so new buffer is finally made now");
 		buffer = new Buffer<TextCharSprite>(8, 8, false);
 
 		if (program == null) {
@@ -247,15 +250,15 @@ class Text {
 		if (!program.isIn(display)) {
 			display.addProgram(program);
 		}
+		this.font = font;
 
-		trace("Fuck all of this");
-		Sys.println(buffer != null);
+		//trace("Fuck all of this");
+		//Sys.println(buffer != null);
 		if (text.length == 0 || text == null) text = "Sample text";
 		else this.text = text;
 		this.x = x;
 		this.y = y;
 
-		this.font = font;
 		this.display = display;
 	}
 
