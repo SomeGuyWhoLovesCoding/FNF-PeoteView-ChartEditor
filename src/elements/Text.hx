@@ -270,47 +270,44 @@ class Text {
 			program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
 			program.setFragmentFloatPrecision('medium', true);
 
-			program.injectIntoFragmentShader('
+			program.injectIntoFragmentShader("
 				vec4 outline(int textureID, float os, vec4 oc) {
-					// original code from https://stackoverflow.com/q/69481402/21013172, translated using claude.ai
-
 					// Since sprite is enlarged by formula w + (w * os * 2.0), 
 					// the original texture should map to the center portion
-					// Invert the enlargement: if new_size = old_size * (1 + os * 2), 
-					// then old_size / new_size = 1 / (1 + os * 2)
 					float invScale = 1.0 + os * 2.0;
 					vec2 coord = (vTexCoord - 0.5) * invScale + 0.5;
-
+					
 					float x = coord.x;
 					float y = coord.y;
 					
 					vec4 current = getTextureColor(textureID, coord);
 					
-					if (current.a != 1.0) {
+					//if (current.a < 0.99) { don't do this if condition. Makes outlines look like shit
 						float offset = os;
+						float maxAlpha = 0.0;
 						
-						vec4 top = getTextureColor(textureID, vec2(x, y - offset));
-						vec4 topRight = getTextureColor(textureID, vec2(x + offset, y - offset));
-						vec4 topLeft = getTextureColor(textureID, vec2(x - offset, y - offset));
-						vec4 right = getTextureColor(textureID, vec2(x + offset, y));
-						vec4 bottom = getTextureColor(textureID, vec2(x, y + offset));
-						vec4 bottomLeft = getTextureColor(textureID, vec2(x - offset, y + offset));
-						vec4 bottomRight = getTextureColor(textureID, vec2(x + offset, y + offset));
-						vec4 left = getTextureColor(textureID, vec2(x - offset, y));
+						// Sample 8 directions and find max alpha
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x, y - offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x + offset, y - offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x - offset, y - offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x + offset, y)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x, y + offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x - offset, y + offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x + offset, y + offset)).a);
+						maxAlpha = max(maxAlpha, getTextureColor(textureID, vec2(x - offset, y)).a);
 						
-						if (top.a > 0.4 || bottom.a > 0.4 || left.a > 0.4 || right.a > 0.4 || 
-							topLeft.a > 0.4 || topRight.a > 0.4 || bottomLeft.a > 0.4 || bottomRight.a > 0.4) {
-							if (current.a != 0.0) {
-								current = mix(oc, current, current.a);
-							} else {
-								current = oc;
-							}
+						// Create smooth outline
+						if (maxAlpha > 0.1) {
+							// Blend outline with current pixel based on alpha
+							float outlineStrength = maxAlpha * (1.0 - current.a);
+							vec4 outline = vec4(oc.rgb, oc.a * outlineStrength);
+							current = mix(outline, current, current.a);
 						}
-					}
+					//}
 					
 					return current;
 				}
-			');
+			");
 
 			program.setColorFormula('outline(font_ID, os, oc) * (c * alphaColor)');
 		}
