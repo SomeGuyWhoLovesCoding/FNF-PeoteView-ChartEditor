@@ -68,10 +68,10 @@ class Main extends Application
 
 			peoteView.start();
 
+			addDisplays();
+
 			ChartUIOverlay.init(uiOverlayDisplay);
 			chartUIOverlay = new ChartUIOverlay();
-
-			addDisplays();
 
 			resize(peoteView.width, peoteView.height);
 

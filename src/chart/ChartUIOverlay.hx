@@ -47,15 +47,7 @@ class ChartUIOverlay {
 		}
 
 		if (text == null) {
-			var elementOffset = 0;
-			elementOffset++; // background
-			elementOffset += NUM_ICON_ELEMENTS;
-			elementOffset++; // visual indicator (regular)
-			elementOffset++; // tab group background
-			elementOffset += NUM_ICON_ELEMENTS;
-			elementOffset++; // visual indicator (tab group)
-			text = new Text("", 0, 0, display, "Sample text", "arial", false, uiBuf, elementOffset);
-
+			text = new Text("wow", 200, 200, display, "Hi", "arial");
 		}
 
 		underlyingData = haxe.Json.parse(sys.io.File.getContent("manifest/tabs.json"));

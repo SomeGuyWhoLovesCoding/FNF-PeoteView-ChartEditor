@@ -25,7 +25,7 @@ class Text {
 
 		if (text != null) {
 			for (i in str.length...text.length) {
-				var elem = buffer.getElement(_startingElemOffset + i);
+				var elem = buffer.getElement(i);
 				if (elem != null) {
 					elem.x = elem.y = -999999999;
 				}
@@ -47,7 +47,7 @@ class Text {
 			var canUseFromBuffer = i < buffer.length;
 
 			var spr:TextCharSprite = canUseFromBuffer 
-				? buffer.getElement(_startingElemOffset + i) 
+				? buffer.getElement(i) 
 				: buffer.addElement(new TextCharSprite());
 
 			spr.clipX = data.position.x + padding;
@@ -81,7 +81,7 @@ class Text {
 		}
 
 		for (i in 0...text.length) {
-			var elem = buffer.getElement(_startingElemOffset + i);
+			var elem = buffer.getElement(i);
 			elem.x += value - x;
 		}
 
@@ -98,7 +98,7 @@ class Text {
 		}
 
 		for (i in 0...text.length) {
-			var elem = buffer.getElement(_startingElemOffset + i);
+			var elem = buffer.getElement(i);
 			elem.y += value - y;
 		}
 
@@ -128,7 +128,7 @@ class Text {
 			var data = parsedTextAtlasData[code];
 			var padding = data.padding;
 
-			var spr = buffer.getElement(_startingElemOffset + i);
+			var spr = buffer.getElement(i);
 
 			spr.clipX = data.position.x + padding;
 			spr.clipY = data.position.y + padding;
@@ -163,7 +163,7 @@ class Text {
 
 	function set_alpha(value:Float):Float {
 		for (i in 0...text.length) {
-			var spr = buffer.getElement(_startingElemOffset + i);
+			var spr = buffer.getElement(i);
 			if (spr != null) {
 				spr.alpha = value;
 			}
@@ -177,7 +177,7 @@ class Text {
 
 	function set_color(value:Color):Color {
 		for (i in 0...text.length) {
-			var spr = buffer.getElement(_startingElemOffset + i);
+			var spr = buffer.getElement(i);
 			if (spr != null) {
 				spr.c = value;
 			}
@@ -191,7 +191,7 @@ class Text {
 
 	function set_outlineColor(value:Color):Color {
 		for (i in 0...text.length) {
-			var spr = buffer.getElement(_startingElemOffset + i);
+			var spr = buffer.getElement(i);
 			if (spr != null) {
 				spr.oc = value;
 			}
@@ -215,7 +215,7 @@ class Text {
 		var index = text.indexOf(part);
 
 		for (i in index...index + part.length) {
-			var spr = buffer.getElement(_startingElemOffset + i);
+			var spr = buffer.getElement(i);
 			if (spr != null) {
 				spr.c = color;
 				spr.oc = outlineColor;
@@ -228,41 +228,34 @@ class Text {
 
 	var parsedTextAtlasData:Array<TextCharData>;
 
-	var _startingElemOffset:Int;
-
-	function new(key:String, x:Float, y:Float, display:Display, text:String = "Sample text", font:String = "vcr", makeProgram:Bool = true, ?customBuffer:Buffer<TextCharSprite>, customBufferStartingElemOffset:Int = 0) {
-		if (text.length == 0) text = "Sample text";
+	function new(key:String, x:Float, y:Float, display:Display, text:String = "Sample text", font:String = "vcr") {
 		_key = key;
 
-		this.font = font;
+		trace("Okay, so new buffer is finally made now");
+		buffer = new Buffer<TextCharSprite>(8, 8, false);
 
-		this.display = display;
-
-		if (customBuffer != null) {
-			buffer = customBuffer;
-			_startingElemOffset = customBufferStartingElemOffset;
-		} else {
-			buffer = new Buffer<TextCharSprite>(8, 8, false);
+		if (program == null) {
+			program = new Program(buffer);
+			program.blendEnabled = true;
+			program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
+			program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
+			program.setFragmentFloatPrecision('medium', true);
+			program.setColorFormula('getTextureColor(font_ID, vTexCoord) * (c * alphaColor)');
 		}
 
-		if (makeProgram) {
-			if (program == null) {
-				program = new Program(buffer);
-				program.blendEnabled = true;
-				program.blendSrc = program.blendSrcAlpha = BlendFactor.ONE;
-				program.blendDst = program.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
-				program.setFragmentFloatPrecision('medium', true);
-				program.setColorFormula('getTextureColor(font_ID, vTexCoord) * (c * alphaColor)');
-			}
-
-			if (!program.isIn(display)) {
-				display.addProgram(program);
-			}
+		if (!program.isIn(display)) {
+			display.addProgram(program);
 		}
 
-		this.text = text;
+		trace("Fuck all of this");
+		Sys.println(buffer != null);
+		if (text.length == 0 || text == null) text = "Sample text";
+		else this.text = text;
 		this.x = x;
 		this.y = y;
+
+		this.font = font;
+		this.display = display;
 	}
 
 	function dispose() {
