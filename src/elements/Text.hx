@@ -39,15 +39,12 @@ class Text {
 
 		text = str;
 
-		for (i in 0...str.length) {
-			var code = str.charCodeAt(i) - 32;
+		var quarterScale = scale / 4; // Yes, I did this intentionally.
 
-			if (code > 95) {
-				code = 0;
-			}
+		for (i in 0...str.length) {
+			var code = str.charCodeAt(i);
 
 			var data = parsedTextAtlasData[code];
-			var padding = data.padding;
 
 			var canUseFromBuffer = i < buffer.length;
 
@@ -55,22 +52,10 @@ class Text {
 				? buffer.getElement(i)
 				: buffer.addElement(new TextCharSprite());
 
-			spr.clipX = data.position.x + padding;
-			spr.clipY = data.position.y + padding;
-			spr.clipWidth = spr.clipSizeX = data.sourceSize.width;
-			spr.w = (spr.clipWidth * scale);
-			spr.clipHeight = spr.clipSizeY = data.sourceSize.height;
-			spr.h = (spr.clipHeight * scale);
-			spr.x = x + (data.char.offset.x * scale) + advanceX;
-			spr.y = y + (data.char.offset.y * scale);
-			spr.c = color;
-			spr.oc = outlineColor;
-			spr.os = outlineSize;
-			spr.alpha = alpha;  // Restore alpha to current value
-			advanceX += (data.char.advanceX * scale);
+			advanceX = setupCharSprite(spr, data, quarterScale, x, y, advanceX, color, outlineColor, outlineSize, alpha, parsedTextAtlasData);
 
-			if (height < spr.h) {
-				height = spr.h;
+			if (height < spr.h + spr.y-data[1]) {
+				height = spr.h + spr.y-data[1];
 			}
 
 			buffer.updateElement(spr);
@@ -123,39 +108,28 @@ class Text {
 		}
 
 		scale = value;
+		var quarterScale = scale / 4; // Yes, I did this intentionally.
 
 		var advanceX:Float = 0;
 
 		for (i in 0...text.length) {
-			var code = text.charCodeAt(i) - 32;
-
-			if (code > 95) {
-				code = 0;
-			}
+			var code = text.charCodeAt(i);
 
 			var data = parsedTextAtlasData[code];
-			var padding = data.padding;
 
 			var spr = buffer.getElement(i);
 
-			spr.clipX = data.position.x + padding;
-			spr.clipY = data.position.y + padding;
-			spr.clipWidth = spr.clipSizeX = data.sourceSize.width;
-			spr.w = (spr.clipWidth * scale);
-			spr.clipHeight = spr.clipSizeY = data.sourceSize.height;
-			spr.h = (spr.clipHeight * scale);
-			spr.x = x + (data.char.offset.x * scale) + advanceX;
-			spr.y = y + (data.char.offset.y * scale);
-			advanceX += (data.char.advanceX * scale);
+			advanceX = setupCharSpriteScaled(spr, data, quarterScale, x, y, advanceX, parsedTextAtlasData);
 
-			if (height < spr.h) {
-				height = spr.h;
+			if (height < spr.h + spr.y-data[1]) {
+				height = spr.h + spr.y-data[1];
 			}
 
 			buffer.updateElement(spr);
 		}
 
 		width = advanceX;
+		height = parsedTextAtlasData[256][2] * quarterScale;
 		_scale = scale;
 
 		return value;
@@ -215,7 +189,6 @@ class Text {
 	var outlineSize(default, set):Float = 0;
 
 	function set_outlineSize(value:Float):Float {
-		if (outlineSize <= 0) outlineSize = -1;
 		for (i in 0...text.length) {
 			var spr = buffer.getElement(i);
 			if (spr != null) {
@@ -255,6 +228,38 @@ class Text {
 
 	var parsedTextAtlasData:Array<TextCharData>;
 
+	function setupCharSprite(spr:TextCharSprite, data:TextCharData, quarterScale:Float, x:Float, y:Float, advanceX:Float, color:Color, outlineColor:Color, outlineSize:Float, alpha:Float, atlasData:Array<TextCharData>):Float {
+		var padding = atlasData[256];
+		spr.clipX = data[0] - (padding[0] >> 1);
+		spr.clipY = data[1] - (padding[1] >> 1);
+		spr.clipWidth = spr.clipSizeX = data[2] + padding[0];
+		spr.w = (spr.clipWidth * quarterScale);
+		spr.clipHeight = spr.clipSizeY = data[3] + padding[0];
+		spr.h = (spr.clipHeight * quarterScale);
+		spr.x = x + (data[4] * quarterScale) + advanceX;
+		spr.y = y + (data[5] * quarterScale);
+		spr.c = color;
+		spr.oc = outlineColor;
+		spr.os = outlineSize;
+		spr.alpha = alpha;
+		advanceX += (data[6] * quarterScale);
+		return advanceX;
+	}
+
+	function setupCharSpriteScaled(spr:TextCharSprite, data:TextCharData, quarterScale:Float, x:Float, y:Float, advanceX:Float, atlasData:Array<TextCharData>):Float {
+		var padding = atlasData[256];
+		spr.clipX = data[0] - (padding[0] >> 1);
+		spr.clipY = data[1] - (padding[1] >> 1);
+		spr.clipWidth = spr.clipSizeX = data[2] + padding[0];
+		spr.w = (spr.clipWidth * quarterScale);
+		spr.clipHeight = spr.clipSizeY = data[3] + padding[0];
+		spr.h = (spr.clipHeight * quarterScale);
+		spr.x = x + (data[4] * quarterScale) + advanceX;
+		spr.y = y + (data[5] * quarterScale);
+		advanceX += (data[6] * quarterScale);
+		return advanceX;
+	}
+
 	function new(key:String, x:Float, y:Float, display:Display, text:String = "Sample text", font:String = "vcr") {
 		_key = key;
 
@@ -272,32 +277,31 @@ class Text {
 
 			program.injectIntoFragmentShader('
 				vec4 outline(int textureID, float os, vec4 oc) {
-					// original code from https://stackoverflow.com/q/69481402/21013172, translated using claude.ai
+					// Simple 8-directional outline like HaxeFlixel
 
-					// Since sprite is enlarged by formula w + (w * os * 2.0), 
-					// the original texture should map to the center portion
-					// Invert the enlargement: if new_size = old_size * (1 + os * 2), 
-					// then old_size / new_size = 1 / (1 + os * 2)
 					float invScale = 1.0 + os * 2.0;
 					vec2 coord = (vTexCoord - 0.5) * invScale + 0.5;
 
-					float x = coord.x;
-					float y = coord.y;
-					
 					vec4 current = getTextureColor(textureID, coord);
 
-					if (current.a <= 0.7) {
-						float w = os;
-						float h = os;
-						
-						if (getTextureColor(textureID, vec2(coord.x + w, coord.y)).a != 0.0
-						|| getTextureColor(textureID, vec2(coord.x - w, coord.y)).a != 0.0
-						|| getTextureColor(textureID, vec2(coord.x, coord.y + h)).a != 0.0
-						|| getTextureColor(textureID, vec2(coord.x, coord.y - h)).a != 0.0)
-							current = oc;
+					// Sample 8 directions around the pixel
+					float outlineAlpha = 0.0;
+					int samples = 64;
+
+					for (int i = 0; i < samples; i++) {
+						float angle = float(i) * 0.09817477;
+						vec2 offset = vec2(cos(angle), sin(angle)) * os;
+						float alpha = getTextureColor(textureID, coord + offset).a;
+						outlineAlpha = max(outlineAlpha, alpha);
 					}
-					
-					return current;
+
+					// Only apply outline where original is transparent
+					outlineAlpha *= (1.0 - current.a);
+
+					// Composite: outline behind text
+					vec4 result = mix(vec4(oc.rgb, outlineAlpha), current, current.a);
+
+					return result;
 				}
 			');
 

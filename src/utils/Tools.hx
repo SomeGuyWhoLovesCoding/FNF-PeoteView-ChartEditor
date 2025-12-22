@@ -3,6 +3,7 @@ package utils;
 import sys.io.File;
 import sys.FileSystem;
 import data.chart.Header;
+import sys.io.Process;
 using StringTools;
 
 @:publicFields
@@ -137,12 +138,61 @@ class Tools {
 		return finalData;
 	}
 
+	private static var _fontsCached(default, null):Map<String, Array<elements.text.TextCharData>> = [];
+	private static var _process(default, null):Process;
 	static function parseFont(name:String):Array<elements.text.TextCharData> {
-		var path = 'assets/fonts/$name/data.json';
-		var data = haxe.Json.parse(sys.io.File.getContent(path));
-		//trace("TEXT JSON DATA",data);
-		TextureSystem.createTexture(name + "Font", path.replace('data.json', data.atlas.imagePath), false, true);
-		return data.sprites;
+		//Sys.println('QUERY GAME FONT: $name');
+		if (_fontsCached.exists(name))
+			return _fontsCached[name];
+
+		var path = 'assets/fonts/$name';
+		var fontPathSub = '$path/$name';
+		var fontPath = '$fontPathSub.fnt';
+		var fontPNGPath = '${fontPathSub}_0.png';
+
+		var condition = FileSystem.exists(fontPath) && FileSystem.exists(fontPNGPath);
+
+		if (!condition) { // automatically make the path
+			// placeholder
+			// - V  this is required. V  - the batchfile (or bash if you're on linux) doesn't make any directories and only saves to whatever exists.
+			//Sys.println('CREATE GAME FONT PATH: $name');
+			//trace(fontPathSub);
+			var fontPathSys = 'ttfs/$name.ttf';
+			Sys.println('FONT PATH $fontPathSys');
+			FileSystem.createDirectory(path);
+			//var processfile:String = "assets/fonts/fontbm";
+			Sys.command("assets\\fonts\\batch_fonts", [
+				'$name'
+			]);
+			//trace(process.exitCode(true));
+			//trace(_process.stdout.readAll().length);
+			//while (_process.exitCode(false) == null) Sys.sleep(0.001);
+		}
+
+		var contents = File.getContent(fontPath);
+		var data = haxe.Json.parse(contents);
+
+		var parsedData:Array<elements.text.TextCharData> = [for (i in 0...257) [0, 0, 0, 0, 0, 0, 0]];
+		var padding:Array<Int> = data.info.padding;
+		var chars = data.chars;
+		for (i in 0...chars.length) {
+			var element = chars[i];
+			var number:Int = element.id;
+			parsedData[number][0] = element.x;
+			parsedData[number][1] = element.y;
+			parsedData[number][2] = element.width;
+			parsedData[number][3] = element.height;
+			parsedData[number][4] = element.xoffset;
+			parsedData[number][5] = element.yoffset;
+			parsedData[number][6] = element.xadvance;
+		}
+		parsedData[256][0] = padding[0];
+		parsedData[256][1] = padding[1];
+
+		TextureSystem.createTexture(name + "Font", fontPNGPath, false, true);
+
+		_fontsCached[name] = parsedData;
+		return parsedData;
 	}
 
 	/**
